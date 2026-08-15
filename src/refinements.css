@@ -1,0 +1,58 @@
+.feature-intro .feature-label {
+  margin-bottom: 32px;
+  font-size: clamp(18px, 1.8vw, 28px);
+  line-height: 1.15;
+  letter-spacing: .08em;
+}
+
+/* Capture-mode photography */
+.mode-visual {
+  inset: 0 !important;
+  height: auto;
+  opacity: 1 !important;
+  background: #091012 !important;
+}
+
+.mode-visual > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  opacity: 1;
+  filter: none;
+  transform: none;
+  transition: transform .25s ease;
+}
+
+.mode-visual > span {
+  display: none;
+}
+
+.mode-grid article:hover .mode-visual > img {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.025);
+}
+
+.mode-copy {
+  padding: clamp(28px, 2.3vw, 42px) !important;
+}
+
+.mode-copy h3 {
+  margin: 0 0 14px !important;
+  font-size: clamp(29px, 2.4vw, 43px) !important;
+  line-height: 1.03;
+}
+
+.mode-copy p {
+  max-width: 32ch;
+  font-size: clamp(15px, 1.05vw, 18px) !important;
+  line-height: 1.55 !important;
+  color: #d0ddda !important;
+}
+
+@media (max-width: 720px) {
+  .mode-copy h3 { font-size: 32px !important; }
+  .mode-copy p { font-size: 16px !important; }
+}
