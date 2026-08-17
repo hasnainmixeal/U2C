@@ -81,10 +81,10 @@ const scenes = [
 ];
 
 const modes = [
-  ['product', 'Product Capture', 'Object-focused layouts with bounds-aware aiming. Also supports object masking to isolate only the target asset and ignore surroundings.', '/product-capture.webp'],
-  ['path', 'Path Capture', 'Editable spline routes with overlapping cameras.', '/ForPathCapture.webp'],
-  ['volume', 'Volume Capture', 'Room and space coverage with clearance filtering.', '/volume-capture.webp'],
-  ['aerial', 'Oblique Aerial Capture', 'Configurable aerial routes for large exterior maps.', '/ForObliqueAerialCapture.webp']
+  ['product', 'Product Capture', 'Object-focused layouts with bounds-aware aiming. Also supports object masking to isolate only the target asset and ignore surroundings.', './product-capture.webp'],
+  ['path', 'Path Capture', 'Editable spline routes with overlapping cameras.', './ForPathCapture.webp'],
+  ['volume', 'Volume Capture', 'Room and space coverage with clearance filtering.', './volume-capture.webp'],
+  ['aerial', 'Oblique Aerial Capture', 'Configurable aerial routes for large exterior maps.', './ForObliqueAerialCapture.webp']
 ];
 
 const faqs = [
