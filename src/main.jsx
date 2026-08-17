@@ -6,35 +6,903 @@ import './refinements.css';
 const FAB='https://www.fab.com/listings/d5ce0b45-8c80-486d-8316-882856198875';
 const DOCS='https://docs.google.com/document/d/1TI85713-m77ffLTBt8gXm0qnTO-rZNs4cMDOiOCsAPc/edit?usp=sharing';
 const DISCORD='https://discord.gg/PnuU3eW8J';
-const scenes=[['176ba55a','Soul Cave','Hassnain Aly'],['3b3de8bc','Evermotion Archinterior Scene','Walhar Gohar'],['663fbcd3','Art Gallery Interior','Alejandro Nevárez'],['692c4f91','UE5 City Sample – Small Part','Walhar Gohar'],['71111000','T4 Apartment','Andy Praseetyo'],['797f5c99','Apollo Moon Lander – Lumen Reflections','Walhar Gohar'],['c37cb759','Studio 11','Goce Milanoski'],['3c0f3775','Derelict Corridor','Walhar Gohar'],['b7c8d8c5','Interior Space','NBV.Studio'],['9ae3b553','Epic Games Hillside Sample','Walhar Gohar']];
-const modes=[
- ['product','Product Capture','Object-focused layouts with bounds-aware aiming.','/product-capture.webp'],
- ['path','Path Capture','Editable spline routes with overlapping cameras.','/path-capture.webp'],
- ['volume','Volume Capture','Room and space coverage with clearance filtering.','/volume-capture.webp'],
- ['aerial','Oblique Aerial Capture','Configurable aerial routes for large exterior maps.','/oblique-aerial-capture-v2.webp']
-];
-const faqs=[['Does Unreal to Gaussian Splat train the final Gaussian Splat?','No. The plugin generates the COLMAP-ready dataset used for training. Training happens afterward in compatible software such as Postshot or LichtFeld Studio.'],['Does the plugin render Gaussian Splats inside Unreal Engine?','No. It is an editor-only dataset-generation tool.'],['Do I need to manually align cameras in COLMAP?','No manual camera alignment or external COLMAP reconstruction is required.'],['Can I change point-cloud density after capturing images?','Yes. Version 3.0 allows point-cloud density to be selected after image capture.'],['Which Unreal Engine versions are supported?','Windows with Unreal Engine 5.4, 5.5, 5.6, 5.7 and 5.8.'],['What can I use to train the exported dataset?','Postshot, LichtFeld Studio and other COLMAP-compatible Gaussian Splatting / NeRF trainers.']];
-const iteration=['Add additional cameras','Preview captured views','Preview pending views','Inspect RGB images','Change density after capture','Generate independently','Color independently','Export independently','Optional .ply','Object masks'];
-const Arrow=()=> <span aria-hidden="true">→</span>;
 
-function PointCloud(){
- const canvas=useRef(null),mouse=useRef({x:-1000,y:-1000,active:false}),frame=useRef();
- useEffect(()=>{const c=canvas.current,ctx=c.getContext('2d'),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let w,h,pts=[];
-  const resize=()=>{const r=c.getBoundingClientRect(),dpr=Math.min(devicePixelRatio,1.5);w=r.width;h=r.height;c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);pts=Array.from({length:Math.min(620,Math.floor(w*h/850))},(_,i)=>{const a=i*2.39996,radius=Math.sqrt(i/620),x=Math.cos(a)*radius,y=Math.sin(a)*radius,z=Math.sin(a*3+radius*5);return{x,y,z,s:.7+(z+1)*.55,ox:0,oy:0,vx:0,vy:0}})};
-  const draw=()=>{ctx.clearRect(0,0,w,h);for(const p of pts){const depth=1+p.z*.14,bx=w*.54+p.x*w*.38*depth,by=h*.5+p.y*h*.43;const dx=bx+p.ox-mouse.current.x,dy=by+p.oy-mouse.current.y,dist=Math.hypot(dx,dy);if(mouse.current.active&&dist<105){const force=(1-dist/105)*1.7;p.vx+=(dx/(dist||1))*force;p.vy+=(dy/(dist||1))*force}p.vx+=-p.ox*.018;p.vy+=-p.oy*.018;p.vx*=.9;p.vy*=.9;p.ox+=p.vx;p.oy+=p.vy;const alpha=.22+(p.z+1)*.24;ctx.beginPath();ctx.arc(bx+p.ox,by+p.oy,p.s,0,7);ctx.fillStyle=p.x<0?`rgba(214,255,76,${alpha})`:`rgba(91,228,255,${alpha})`;ctx.fill()}if(!reduced)frame.current=requestAnimationFrame(draw)};
-  resize();draw();const ro=new ResizeObserver(resize);ro.observe(c);return()=>{ro.disconnect();cancelAnimationFrame(frame.current)}
- },[]);
- return <canvas ref={canvas} className="point-cloud" aria-hidden="true" onPointerEnter={()=>{mouse.current.active=true}} onPointerMove={e=>{const r=e.currentTarget.getBoundingClientRect();mouse.current.x=e.clientX-r.left;mouse.current.y=e.clientY-r.top;mouse.current.active=true}} onPointerLeave={()=>{mouse.current.active=false}}/>;
+const scenes = [
+  {
+    id: '176ba55a',
+    title: 'Soul Cave',
+    author: 'Hassnain Aly',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/176ba55a/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/176ba55a/v1/mov.webp'
+  },
+  {
+    id: '3b3de8bc',
+    title: 'Evermotion Archinterior Scene',
+    author: 'Walhar Gohar',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/3b3de8bc/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/3b3de8bc/v1/mov.webp'
+  },
+  {
+    id: '663fbcd3',
+    title: 'Art Gallery Interior',
+    author: 'Alejandro Nevárez',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/663fbcd3/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/663fbcd3/v1/mov.webp'
+  },
+  {
+    id: '692c4f91',
+    title: 'UE5 City Sample – Small Part',
+    author: 'Walhar Gohar',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/692c4f91/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/692c4f91/v1/mov.webp'
+  },
+  {
+    id: '71111000',
+    title: 'T4 Apartment',
+    author: 'Andy Praseetyo',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/71111000/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/71111000/v1/mov.webp'
+  },
+  {
+    id: '797f5c99',
+    title: 'Apollo Moon Lander – Lumen Reflections',
+    author: 'Walhar Gohar',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/797f5c99/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/797f5c99/v1/mov.webp'
+  },
+  {
+    id: 'c37cb759',
+    title: 'Studio 11',
+    author: 'Goce Milanoski',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/c37cb759/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/c37cb759/v1/mov.webp'
+  },
+  {
+    id: '3c0f3775',
+    title: 'Derelict Corridor',
+    author: 'Walhar Gohar',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/3c0f3775/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/3c0f3775/v1/mov.webp'
+  },
+  {
+    id: 'b7c8d8c5',
+    title: 'Interior Space',
+    author: 'NBV.Studio',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/b7c8d8c5/v2/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/b7c8d8c5/v2/mov.webp'
+  },
+  {
+    id: '9ae3b553',
+    title: 'Epic Games Hillside Sample',
+    author: 'Walhar Gohar',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/9ae3b553/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/9ae3b553/v1/mov.webp'
+  }
+];
+
+const modes = [
+  ['product', 'Product Capture', 'Object-focused layouts with bounds-aware aiming. Also supports object masking to isolate only the target asset and ignore surroundings.', '/product-capture.webp'],
+  ['path', 'Path Capture', 'Editable spline routes with overlapping cameras.', '/ForPathCapture.webp'],
+  ['volume', 'Volume Capture', 'Room and space coverage with clearance filtering.', '/volume-capture.webp'],
+  ['aerial', 'Oblique Aerial Capture', 'Configurable aerial routes for large exterior maps.', '/ForObliqueAerialCapture.webp']
+];
+
+const faqs = [
+  [
+    'Does the plugin capture images, generate, and color the point cloud automatically in one click?',
+    'Yes! In a single click, Unreal to Gaussian Splat handles all three core stages: capturing the multi-view RGB images, generating the 3D point cloud via automated complex collisions, and coloring the point cloud from the captured imagery. You also have full freedom to run or reconfigure any of these stages independently.'
+  ],
+  [
+    'How does the plugin achieve accurate point clouds without messing up my project collision?',
+    'The plugin uses an automated, non-destructive collision system. Before generating the point cloud, it temporarily activates per-polygon complex collision for all meshes in your scene to cast accurate sampling rays. Once the point cloud is generated, it automatically reverts all collision settings back to their exact original state, leaving your project cleanly untouched.'
+  ],
+  [
+    'Does Unreal to Gaussian Splat train the final Gaussian Splat?',
+    'No. The plugin generates the complete, ready-to-train COLMAP dataset (cameras, images, and colored sparse point cloud). Training happens afterward in compatible software such as Postshot, LichtFeld Studio, or Nerfstudio.'
+  ],
+  [
+    'Does the plugin render Gaussian Splats inside Unreal Engine?',
+    'No. It is an editor-only dataset generation powerhouse designed to export perfect datasets from Unreal Engine for 3DGS training.'
+  ],
+  [
+    'Do I need to manually align cameras in COLMAP?',
+    'No! The plugin calculates mathematical ground-truth camera extrinsics and intrinsics directly from Unreal Editor, eliminating manual COLMAP feature matching, alignment failures, and hours of reconstruction time.'
+  ],
+  [
+    'Can I change point-cloud density after capturing images?',
+    'Yes. Version 3.0 allows you to change point-cloud density presets and re-generate or re-color point clouds directly from existing captured images without re-rendering.'
+  ],
+  [
+    'Which Unreal Engine versions are supported?',
+    'Windows with Unreal Engine 5.4, 5.5, 5.6, 5.7, and 5.8.'
+  ],
+  [
+    'What software can I use to train the exported dataset?',
+    'Postshot, LichtFeld Studio, Nerfstudio, 3DGS official repo, and all other standard COLMAP-compatible Gaussian Splatting trainers.'
+  ]
+];
+
+const iteration = [
+  '1-Click automated execution',
+  'Complex collision ray-casting',
+  'Non-destructive auto-restore',
+  'Object masking support',
+  'Add additional cameras',
+  'Preview captured views',
+  'Preview pending views',
+  'Inspect RGB images',
+  'Change density after capture',
+  'Generate independently',
+  'Color independently',
+  'Export independently'
+];
+
+const Arrow = () => <span aria-hidden="true">→</span>;
+
+/**
+ * 3D Tunnel Point Cloud with Dual Camera Path & Interactive Spring Physics.
+ * Top-front angled view, enlarged scale, ultra-lightweight (pure 2D Canvas math, < 6KB, 0ms load, 60fps).
+ */
+function PointCloud() {
+  const canvas = useRef(null);
+  const mouse = useRef({ x: -1000, y: -1000, active: false });
+  const frame = useRef();
+
+  useEffect(() => {
+    const c = canvas.current;
+    const ctx = c.getContext('2d');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let w, h;
+    let pts = [];
+    let cameras = [];
+    let time = 0;
+
+    const buildGeometry = () => {
+      pts = [];
+      cameras = [];
+      const numRings = 26;
+      const pointsPerRing = 28;
+      const radius = 210; // reduced by 0.3x
+      const length = 620;
+
+      // 1. Generate Arched Tunnel Corridor & Ribs
+      for (let r = 0; r < numRings; r++) {
+        const z = -length / 2 + (r / (numRings - 1)) * length;
+        for (let i = 0; i < pointsPerRing; i++) {
+          const theta = -Math.PI + (i / (pointsPerRing - 1)) * Math.PI; // Arch curve
+          const x = Math.cos(theta) * radius + (Math.random() - 0.5) * 8;
+          const y = Math.sin(theta) * (radius * 0.92) + 48 + (Math.random() - 0.5) * 8;
+          const isHighlight = Math.random() < 0.24;
+          pts.push({
+            x, y, z,
+            ox: 0, oy: 0, vx: 0, vy: 0,
+            isHighlight,
+            isFloor: false
+          });
+        }
+      }
+
+      // 2. Floor Grid & Walkway Points
+      for (let fz = -length / 2; fz <= length / 2; fz += 24) {
+        for (let fx = -radius * 0.88; fx <= radius * 0.88; fx += 26) {
+          pts.push({
+            x: fx + (Math.random() - 0.5) * 6,
+            y: 50 + (Math.random() - 0.5) * 3,
+            z: fz + (Math.random() - 0.5) * 6,
+            ox: 0, oy: 0, vx: 0, vy: 0,
+            isHighlight: Math.abs(fx) < 38 && Math.random() < 0.45,
+            isFloor: true
+          });
+        }
+      }
+
+      // 3. Two Parallel Rows of 3D Camera Wireframe Frustums
+      const numCams = 9;
+      const camSpacing = length / (numCams + 1);
+      const rowOffset = 58; // Spacing between dual rails
+      const camY = 20;
+
+      for (let i = 0; i < numCams; i++) {
+        const cz = -length / 2 + (i + 1) * camSpacing;
+        // Left Row
+        cameras.push({ cx: -rowOffset, cy: camY, cz });
+        // Right Row
+        cameras.push({ cx: rowOffset, cy: camY, cz });
+      }
+    };
+
+    const resize = () => {
+      const r = c.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      w = r.width;
+      h = r.height;
+      c.width = w * dpr;
+      c.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildGeometry();
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      time += 0.0055; // increased speed by 0.3x
+
+      // Steady cinematic top-front revolving angle (mouse moves only points, not the tunnel orientation)
+      const rotY = -0.74 + Math.sin(time * 0.58) * 0.15;
+      const rotX = 0.42 + Math.cos(time * 0.45) * 0.07;
+
+      const cosY = Math.cos(rotY);
+      const sinY = Math.sin(rotY);
+      const cosX = Math.cos(rotX);
+      const sinX = Math.sin(rotX);
+
+      const fov = 490;
+      const camDist = 540;
+      const centerX = w * 0.53;
+      const centerY = h * 0.52;
+
+      // Transform & Project 3D Point
+      const project = (x, y, z) => {
+        const x1 = x * cosY - z * sinY;
+        const z1 = x * sinY + z * cosY;
+        const y2 = y * cosX - z1 * sinX;
+        const z2 = y * sinX + z1 * cosX + camDist;
+        const scale = fov / Math.max(z2, 60);
+        return {
+          sx: centerX + x1 * scale,
+          sy: centerY + y2 * scale,
+          z2,
+          scale
+        };
+      };
+
+      // Draw 3D Tunnel Point Cloud with Mouse Physics
+      for (const p of pts) {
+        const pr = project(p.x, p.y, p.z);
+        const bx = pr.sx;
+        const by = pr.sy;
+
+        // Interactive mouse repulsion (only points move)
+        const dx = bx + p.ox - mouse.current.x;
+        const dy = by + p.oy - mouse.current.y;
+        const dist = Math.hypot(dx, dy);
+        if (mouse.current.active && dist < 110) {
+          const force = (1 - dist / 110) * 2.0;
+          p.vx += (dx / (dist || 1)) * force;
+          p.vy += (dy / (dist || 1)) * force;
+        }
+
+        // Dampened spring physics
+        p.vx += -p.ox * 0.02;
+        p.vy += -p.oy * 0.02;
+        p.vx *= 0.88;
+        p.vy *= 0.88;
+        p.ox += p.vx;
+        p.oy += p.vy;
+
+        // Depth coloring and sizing
+        const depthAlpha = Math.max(0.1, Math.min(0.9, 1.18 - pr.z2 / 980));
+        const ptSize = Math.max(0.7, (1.3 + (p.isHighlight ? 0.9 : 0)) * pr.scale * 1.55);
+
+        ctx.beginPath();
+        ctx.arc(bx + p.ox, by + p.oy, ptSize, 0, Math.PI * 2);
+
+        if (p.isHighlight) {
+          ctx.fillStyle = `rgba(215, 255, 57, ${depthAlpha})`;
+        } else if (p.isFloor) {
+          ctx.fillStyle = `rgba(88, 229, 255, ${depthAlpha * 0.8})`;
+        } else {
+          ctx.fillStyle = `rgba(165, 210, 220, ${depthAlpha * 0.6})`;
+        }
+        ctx.fill();
+      }
+
+      // Draw 3D Camera Wireframe Frustums
+      for (const cam of cameras) {
+        const camPr = project(cam.cx, cam.cy, cam.cz);
+        const cw = 16;
+        const ch = 11;
+        const cd = 24;
+
+        // Camera Frustum vertices (Apex lens pointing forward + 4 base corners)
+        const vApex = project(cam.cx, cam.cy, cam.cz - cd * 0.45);
+        const v1 = project(cam.cx - cw, cam.cy - ch, cam.cz + cd);
+        const v2 = project(cam.cx + cw, cam.cy - ch, cam.cz + cd);
+        const v3 = project(cam.cx + cw, cam.cy + ch, cam.cz + cd);
+        const v4 = project(cam.cx - cw, cam.cy + ch, cam.cz + cd);
+
+        const camAlpha = Math.max(0.18, Math.min(0.95, 1.22 - camPr.z2 / 980));
+
+        ctx.strokeStyle = `rgba(215, 255, 57, ${camAlpha * 0.85})`;
+        ctx.lineWidth = Math.max(0.7, 1.1 * camPr.scale);
+
+        // Frustum base rectangle
+        ctx.beginPath();
+        ctx.moveTo(v1.sx, v1.sy);
+        ctx.lineTo(v2.sx, v2.sy);
+        ctx.lineTo(v3.sx, v3.sy);
+        ctx.lineTo(v4.sx, v4.sy);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Lines from 4 corners to apex lens
+        ctx.beginPath();
+        ctx.moveTo(vApex.sx, vApex.sy); ctx.lineTo(v1.sx, v1.sy);
+        ctx.moveTo(vApex.sx, vApex.sy); ctx.lineTo(v2.sx, v2.sy);
+        ctx.moveTo(vApex.sx, vApex.sy); ctx.lineTo(v3.sx, v3.sy);
+        ctx.moveTo(vApex.sx, vApex.sy); ctx.lineTo(v4.sx, v4.sy);
+        ctx.stroke();
+
+        // Apex lens glowing dot
+        ctx.beginPath();
+        ctx.arc(vApex.sx, vApex.sy, Math.max(1.2, 2.2 * camPr.scale), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(88, 229, 255, ${camAlpha})`;
+        ctx.fill();
+      }
+
+      if (!reduced) frame.current = requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+    const ro = new ResizeObserver(resize);
+    ro.observe(c);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(frame.current);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvas}
+      className="point-cloud"
+      aria-hidden="true"
+      onPointerEnter={() => { mouse.current.active = true; }}
+      onPointerMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        mouse.current.x = e.clientX - r.left;
+        mouse.current.y = e.clientY - r.top;
+        mouse.current.active = true;
+      }}
+      onPointerLeave={() => { mouse.current.active = false; }}
+    />
+  );
 }
-function Logo(){return <a className="logo" href="#top"><i/>U2GS</a>}
-function Nav(){const[open,setOpen]=useState(false);return <header><nav><Logo/><button className="menu" onClick={()=>setOpen(!open)} aria-label="Toggle navigation">☰</button><div className={'navlinks '+(open?'open':'')}>{[['Overview','overview'],['Workflow','workflow'],['Capture Modes','modes'],['Showcase','showcase'],['Features','features'],['FAQ','faq']].map(([a,b])=><a key={b} href={'#'+b} onClick={()=>setOpen(false)}>{a}</a>)}<a className="nav-cta" href={FAB} target="_blank" rel="noreferrer">Get on Fab <Arrow/></a></div></nav></header>}
-function Hero(){return <section id="overview" className="hero"><PointCloud/><div className="hero-copy"><p className="eyebrow">Unreal to Gaussian Splat 3.0</p><h1>Turn Unreal Engine scenes into <em>Gaussian Splat</em> datasets.</h1><p className="lede">Unreal to Gaussian Splat creates <strong>COLMAP-ready datasets</strong> <strong>directly inside Unreal Editor.</strong> Capture your scene, generate its point cloud, then train it in your 3DGS software of choice.</p><div className="hero-actions"><a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow/></a><a className="button quiet" href="#showcase">Explore results <Arrow/></a></div></div><div className="hero-pipeline"><span>UNREAL SCENE</span><i>→</i><strong>COLMAP DATASET</strong><i>→</i><span>3DGS TRAINER</span><i>→</i><b>GAUSSIAN SPLAT</b></div><p className="hero-note">The plugin generates the dataset. Training happens afterward in compatible software.</p></section>}
-function Workflow(){const steps=[['01','Capture Images','Render RGB views and write the COLMAP camera model.'],['02','Generate Point Cloud','Choose a density preset after image capture.'],['03','Color Point Cloud','Sample colors from the captured images.']];return <section id="workflow" className="section workflow"><div className="section-head"><p className="eyebrow">Inside Unreal Editor</p><h2>Three steps to a dataset that is ready to train.</h2></div><div className="flow"><div className="endpoint cyan">Unreal Engine<small>Your scene</small></div>{steps.map(s=><React.Fragment key={s[0]}><i className="connector">→</i><article className="flow-step"><b>{s[0]}</b><h3>{s[1]}</h3><p>{s[2]}</p></article></React.Fragment>)}<i className="connector">→</i><div className="endpoint lime">COLMAP-ready<small>Dataset</small></div></div><div className="boundary"><span>OUTSIDE THE PLUGIN</span><p>Postshot / LichtFeld Studio / compatible trainer <Arrow/> <strong>Gaussian Splat</strong></p></div></section>}
-function Showcase(){const[active,setActive]=useState(0),[near,setNear]=useState(false),[ready,setReady]=useState(false),[slow,setSlow]=useState(false);const root=useRef(null),scene=scenes[active];useEffect(()=>{const ob=new IntersectionObserver(([e])=>{if(e.isIntersecting){setNear(true);ob.disconnect()}},{rootMargin:'300px'});ob.observe(root.current);return()=>ob.disconnect()},[]);useEffect(()=>{setReady(false);setSlow(false);if(!near)return;const t=setTimeout(()=>setSlow(true),25000);return()=>clearTimeout(t)},[active,near]);const choose=i=>{setActive((i+scenes.length)%scenes.length);setNear(true)};return <section id="showcase" className="section showcase" ref={root}><div className="showcase-top"><div><p className="eyebrow">Live 3D gallery</p><h2>Created in Unreal.<br/>Explorable as Gaussian Splats.</h2></div><p>Ten real scenes. One live viewer at a time for fast, reliable loading.</p></div><div className="gallery-shell"><div className="gallery-view">{!ready&&<div className="load-state"><span/><b>{scene[1]}</b><small>Loading interactive splat…</small></div>}{near&&<iframe key={scene[0]} title={`${scene[1]} interactive Gaussian Splat`} src={`https://superspl.at/s?id=${scene[0]}`} allow="fullscreen; xr-spatial-tracking" loading="lazy" onLoad={()=>setReady(true)}/>} {slow&&<a className="slow-link" href={`https://superspl.at/scene/${scene[0]}`} target="_blank" rel="noreferrer">Open directly in SuperSplat ↗</a>}</div><aside className="gallery-info"><p className="counter">{String(active+1).padStart(2,'0')} / 10</p><h3>{scene[1]}</h3><p>Created by {scene[2]}</p><div className="gallery-arrows"><button onClick={()=>choose(active-1)} aria-label="Previous scene">←</button><button onClick={()=>choose(active+1)} aria-label="Next scene">→</button></div><a href={`https://superspl.at/scene/${scene[0]}`} target="_blank" rel="noreferrer">View full scene ↗</a></aside></div><div className="scene-rail">{scenes.map((s,i)=><button key={s[0]} onClick={()=>choose(i)} className={i===active?'active':''}><span>{String(i+1).padStart(2,'0')}</span><b>{s[1]}</b><small>{s[2]}</small></button>)}</div></section>}
-function ModeVisual({type,src,title}){return <div className={'mode-visual '+type}><img src={src} alt="" loading="lazy"/><span/></div>}
-function Modes(){return <section id="modes" className="section modes"><div className="section-head"><p className="eyebrow">Capture modes</p><h2>Build a capture plan that matches the scene.</h2><p>Purpose-built camera placement for objects, paths, spaces and large exterior maps.</p></div><div className="mode-grid">{modes.map(([type,title,copy,src])=><article key={type}><ModeVisual type={type} src={src} title={title}/><div className="mode-copy"><h3>{title}</h3><p>{copy}</p></div></article>)}</div></section>}
-function Features(){return <section id="features" className="section features"><div className="feature-intro"><p className="eyebrow feature-label">What's New in 3.0</p><h2>Capture faster.<br/>Iterate with control.</h2></div><article className="speed-card"><span>UP TO APPROXIMATELY</span><strong>4×</strong><h3>faster image capture in tested projects</h3><p>Performance varies by scene, settings, storage and hardware.</p></article><div className="feature-cards"><article><b>Movie Render Queue</b><p>Anti-aliasing, temporal and spatial sampling controls.</p></article><article><b>Oblique Capture Rig</b><p>Smart Ortho 3-View and Smart Oblique 5-View.</p></article><article><b>Independent stages</b><p>Generate, color and export without repeating capture.</p></article><article><b>Density after capture</b><p>Change point-cloud density from existing RGB images.</p></article></div><aside className="iteration"><p className="eyebrow">Iteration without a full reset</p><h3>Adjust the point-cloud stage without necessarily recapturing everything.</h3><div className="iteration-grid">{iteration.map(x=><span key={x}>{x}</span>)}</div></aside></section>}
-function Compatibility(){const audiences=['Arch-viz','Product Visualization','Game Development','Technical Art','Research','3DGS / NeRF'];return <section className="section compat"><div className="audience"><p className="eyebrow">Built for technical workflows</p><h2>Built for technical 3D workflows.</h2><div className="audience-tags">{audiences.map(x=><span key={x}>{x}</span>)}</div></div><div className="requirements"><article><small>Platform</small><b>Windows</b></article><article><small>Unreal Engine</small><b>5.4 — 5.8</b></article><article><small>Required plugins</small><b>Python Editor Script Plugin</b><b>Editor Scripting Utilities</b><b>Movie Render Queue</b></article></div></section>}
-function FAQ(){const[open,setOpen]=useState(0);return <section id="faq" className="section faq"><div className="section-head"><p className="eyebrow">FAQ</p><h2>Technical answers, plainly stated.</h2></div><div className="faq-list">{faqs.map(([q,a],i)=><article key={q}><button onClick={()=>setOpen(open===i?-1:i)} aria-expanded={open===i}>{q}<span>{open===i?'−':'+'}</span></button><div className={'answer '+(open===i?'open':'')}><p>{a}</p></div></article>)}</div></section>}
-function App(){return <><Nav/><main id="top"><Hero/><Workflow/><Showcase/><Modes/><Features/><Compatibility/><FAQ/><section className="section final"><p className="eyebrow">Start from the scene you already have</p><h2>Ready to turn your Unreal scene into a Gaussian Splat dataset?</h2><div className="hero-actions"><a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow/></a><a className="button quiet" href={DOCS} target="_blank" rel="noreferrer">Read documentation</a><a className="button quiet" href={DISCORD} target="_blank" rel="noreferrer">Join Discord</a></div></section></main><footer><Logo/><p>Unreal to Gaussian Splat — Automated COLMAP Dataset Generator</p><a href={FAB}>Fab ↗</a><a href={DOCS}>Docs ↗</a><a href={DISCORD}>Discord ↗</a></footer></>}
-createRoot(document.getElementById('root')).render(<App/>);
+
+function Logo() {
+  return <a className="logo" href="#top"><i />U2GS</a>;
+}
+
+function Nav() {
+  const [open, setOpen] = useState(false);
+  return (
+    <header>
+      <nav>
+        <Logo />
+        <button className="menu" onClick={() => setOpen(!open)} aria-label="Toggle navigation">☰</button>
+        <div className={'navlinks ' + (open ? 'open' : '')}>
+          {[['Overview', 'overview'], ['Workflow', 'workflow'], ['Showcase', 'showcase'], ['Collision Engine', 'collision'], ['Capture Modes', 'modes'], ['Features', 'features'], ['FAQ', 'faq']].map(([a, b]) => (
+            <a key={b} href={'#' + b} onClick={() => setOpen(false)}>{a}</a>
+          ))}
+          <a className="nav-cta" href={FAB} target="_blank" rel="noreferrer">Get on Fab <Arrow /></a>
+        </div>
+      </nav>
+    </header>
+  );
+}
+
+function Hero() {
+  return (
+    <section id="overview" className="hero">
+      <PointCloud />
+      <div className="hero-copy">
+        <p className="eyebrow">Unreal to Gaussian Splat 3.0</p>
+        <h1>Turn Unreal Engine scenes into <em>Gaussian Splat</em> datasets.</h1>
+        <p className="lede">
+          Unreal to Gaussian Splat captures high-res images, generates precision point clouds, and colors them — <strong>all in one single click</strong> directly inside Unreal Editor. Ready for instant training in Postshot, LichtFeld Studio, or your favorite 3DGS tool.
+        </p>
+        <div className="hero-actions">
+          <a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow /></a>
+          <a className="button quiet" href="#showcase">Explore user splats <Arrow /></a>
+        </div>
+      </div>
+      <div className="hero-pipeline">
+        <span>UNREAL SCENE</span>
+        <i>→</i>
+        <strong title="Captures images, generates & colors point cloud in 1 click">1-CLICK PLUGIN AUTOMATION</strong>
+        <i>→</i>
+        <span>COLMAP DATASET</span>
+        <i>→</i>
+        <b>3DGS TRAINER</b>
+      </div>
+    </section>
+  );
+}
+
+function Workflow() {
+  const steps = [
+    {
+      num: '01',
+      title: 'Capture Images',
+      desc: 'Renders crisp multi-angle RGB views and computes ground-truth COLMAP camera poses.'
+    },
+    {
+      num: '02',
+      title: 'Generate Point Cloud',
+      desc: 'Auto-enables complex collision on all meshes for exact per-poly raycast sampling, then safely restores.'
+    },
+    {
+      num: '03',
+      title: 'Color Point Cloud',
+      desc: 'Projectively samples colors directly from captured camera frames onto every 3D point.'
+    }
+  ];
+
+  return (
+    <section id="workflow" className="section workflow">
+      <div className="section-head">
+        <div className="workflow-badge">
+          <span className="pulse-dot" />
+          <span>ALL 3 STEPS IN ONE SINGLE CLICK</span>
+        </div>
+        <h2>Captures, generates, and colors the point cloud — in one click.</h2>
+        <p>
+          Don't assume the plugin only takes screenshots. In a single automated pass, Unreal to Gaussian Splat executes all three essential middle steps: it captures the multi-view images, reconstructs dense geometry point clouds using complex collision raycasts, and colors every point with scene radiance.
+        </p>
+      </div>
+
+      <div className="flow-wrapper">
+        <div className="flow-one-click-banner">
+          <span className="banner-tag">1-CLICK AUTOMATION BY PLUGIN</span>
+          <span className="banner-sub">No manual camera alignment · No external COLMAP matching needed</span>
+        </div>
+        <div className="flow">
+          <div className="endpoint cyan">
+            Unreal Engine
+            <small>Your 3D Scene</small>
+          </div>
+          {steps.map((s) => (
+            <React.Fragment key={s.num}>
+              <i className="connector">→</i>
+              <article className="flow-step highlighted-step">
+                <div className="step-top">
+                  <b>{s.num}</b>
+                  <span className="step-badge">Auto</span>
+                </div>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
+              </article>
+            </React.Fragment>
+          ))}
+          <i className="connector">→</i>
+          <div className="endpoint lime">
+            COLMAP Dataset
+            <small>Ready to Train</small>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Point: Full Independent Stage Flexibility */}
+      <div className="workflow-hero-feature">
+        <div className="hero-feature-left">
+          <span className="hero-feature-badge">NON-DESTRUCTIVE CONTROL</span>
+          <h3>Adjust or Re-run Any Stage Independently</h3>
+          <p>
+            You are never locked into an all-or-nothing pipeline. Need a denser point cloud? Want to add new cameras or re-sample colors under different lighting? You can trigger, fine-tune, or re-run <strong>any individual stage independently</strong> without re-rendering or re-capturing your scene from scratch.
+          </p>
+        </div>
+        <div className="hero-feature-pills">
+          <div className="hero-pill-item">
+            <span className="pill-icon">🔄</span>
+            <div>
+              <b>Change Density After Capture</b>
+              <small>Re-generate point cloud density instantly from already captured RGB views.</small>
+            </div>
+          </div>
+          <div className="hero-pill-item">
+            <span className="pill-icon">🎨</span>
+            <div>
+              <b>Independent Point Coloring</b>
+              <small>Re-color points with fresh camera passes without recalculating 3D geometry.</small>
+            </div>
+          </div>
+          <div className="hero-pill-item">
+            <span className="pill-icon">⚡</span>
+            <div>
+              <b>Zero Recapture Penalty</b>
+              <small>Iterate in seconds and save hours of rendering time on large scenes.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Showcase() {
+  const [activeModal, setActiveModal] = useState(null);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [hoveredIdx, setHoveredIdx] = useState(null);
+  const [hoverKeys, setHoverKeys] = useState({});
+
+  // Close modal on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setActiveModal(null);
+      if (activeModal !== null) {
+        if (e.key === 'ArrowRight') {
+          setActiveModal((prev) => (prev + 1) % scenes.length);
+          setIframeLoaded(false);
+        }
+        if (e.key === 'ArrowLeft') {
+          setActiveModal((prev) => (prev - 1 + scenes.length) % scenes.length);
+          setIframeLoaded(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeModal]);
+
+  const handleCardMouseEnter = (idx) => {
+    setHoveredIdx(idx);
+    setHoverKeys(prev => ({ ...prev, [idx]: Date.now() }));
+  };
+
+  const handleCardMouseLeave = () => {
+    setHoveredIdx(null);
+  };
+
+  const openSplat = (idx) => {
+    setActiveModal(idx);
+    setIframeLoaded(false);
+  };
+
+  const nextSplat = (e) => {
+    e.stopPropagation();
+    setActiveModal((prev) => (prev + 1) % scenes.length);
+    setIframeLoaded(false);
+  };
+
+  const prevSplat = (e) => {
+    e.stopPropagation();
+    setActiveModal((prev) => (prev - 1 + scenes.length) % scenes.length);
+    setIframeLoaded(false);
+  };
+
+  const currentScene = activeModal !== null ? scenes[activeModal] : null;
+
+  return (
+    <section id="showcase" className="section showcase">
+      <div className="showcase-top">
+        <div>
+          <p className="eyebrow">Interactive Splats Gallery</p>
+          <h2>Here's what users have created using this plugin</h2>
+        </div>
+      </div>
+
+      {/* SuperSplat-style Responsive Grid */}
+      <div className="splat-grid">
+        {scenes.map((scene, idx) => (
+          <div
+            key={scene.id}
+            className="splat-card"
+            onClick={() => openSplat(idx)}
+            onMouseEnter={() => handleCardMouseEnter(idx)}
+            onMouseLeave={handleCardMouseLeave}
+            role="button"
+            tabIndex={0}
+            aria-label={`Open 3D splat of ${scene.title}`}
+          >
+            <div className="splat-thumb-container">
+              {/* Static high-res thumbnail */}
+              <img
+                src={scene.thumb}
+                alt={scene.title}
+                className="splat-thumb-img"
+                loading="lazy"
+              />
+              {/* Motion animated webp preview - resets on every single hover */}
+              {hoveredIdx === idx && (
+                <img
+                  key={hoverKeys[idx]}
+                  src={`${scene.mov}?t=${hoverKeys[idx]}`}
+                  alt={`${scene.title} motion preview`}
+                  className="splat-thumb-mov visible"
+                />
+              )}
+              <div className="splat-hover-overlay">
+                <span className="splat-play-badge">
+                  <span className="play-icon">▶</span> Click to Experience 3D
+                </span>
+              </div>
+            </div>
+            <div className="splat-card-meta">
+              <div className="splat-card-title-row">
+                <h4>{scene.title}</h4>
+                <span className="splat-index">{String(idx + 1).padStart(2, '0')}</span>
+              </div>
+              <p className="splat-card-author">Created by <span>{scene.author}</span></p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Big Screen Interactive Modal / Viewer */}
+      {currentScene && (
+        <div className="splat-modal-backdrop" onClick={() => setActiveModal(null)}>
+          <div className="splat-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="splat-modal-header">
+              <div className="splat-modal-info">
+                <span className="modal-counter">SCENE {String(activeModal + 1).padStart(2, '0')} OF {scenes.length}</span>
+                <h3>{currentScene.title}</h3>
+                <p>Created by <strong>{currentScene.author}</strong></p>
+              </div>
+              <div className="splat-modal-controls">
+                <a
+                  href={`https://superspl.at/scene/${currentScene.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="modal-external-link"
+                >
+                  Open in SuperSplat ↗
+                </a>
+                <button
+                  className="modal-nav-btn"
+                  onClick={prevSplat}
+                  aria-label="Previous Splat"
+                  title="Previous scene (Left Arrow)"
+                >
+                  ←
+                </button>
+                <button
+                  className="modal-nav-btn"
+                  onClick={nextSplat}
+                  aria-label="Next Splat"
+                  title="Next scene (Right Arrow)"
+                >
+                  →
+                </button>
+                <button
+                  className="modal-close-btn"
+                  onClick={() => setActiveModal(null)}
+                  aria-label="Close viewer"
+                  title="Close (Esc)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="splat-modal-body">
+              {!iframeLoaded && (
+                <div className="splat-modal-loader">
+                  <span className="spinner" />
+                  <b>Loading 3D Gaussian Splat…</b>
+                  <small>{currentScene.title}</small>
+                </div>
+              )}
+              <iframe
+                key={currentScene.id}
+                title={`${currentScene.title} 3D Gaussian Splat`}
+                src={`https://superspl.at/s?id=${currentScene.id}`}
+                allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope"
+                onLoad={() => setIframeLoaded(true)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CollisionFeature() {
+  return (
+    <section id="collision" className="section collision-section">
+      <div className="collision-header">
+        <p className="eyebrow">Precision Point Cloud Engine</p>
+        <h2>How our plugin generates per-poly precision point clouds</h2>
+      </div>
+
+      <div className="collision-grid">
+        <div className="collision-card">
+          <div className="card-phase">STEP 01</div>
+          <div className="card-icon">⚡</div>
+          <h3>Enables Complex Collision</h3>
+          <p>
+            Automatically switches every scene mesh to per-polygon collision so raycasts hit true geometry instead of simplified boxes.
+          </p>
+        </div>
+
+        <div className="collision-card highlighted">
+          <div className="card-phase">STEP 02</div>
+          <div className="card-icon">🎯</div>
+          <h3>Dense Surface Raycasting</h3>
+          <p>
+            Casts sub-millimeter geometric rays against exact polygon faces to accurately capture fine trims, foliage, and organic surfaces.
+          </p>
+        </div>
+
+        <div className="collision-card">
+          <div className="card-phase">STEP 03</div>
+          <div className="card-icon">🛡️</div>
+          <h3>Restores Original Settings</h3>
+          <p>
+            Immediately reverts all mesh collision presets back to their exact original state once done. Your project stays cleanly untouched.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ModeVisual({type, src, title}) {
+  return (
+    <div className={'mode-visual ' + type}>
+      <img src={src} alt={title} loading="lazy" />
+      <span />
+    </div>
+  );
+}
+
+function Modes() {
+  return (
+    <section id="modes" className="section modes">
+      <div className="section-head">
+        <p className="eyebrow">Capture modes</p>
+        <h2>Build a capture plan that matches the scene.</h2>
+        <p>Purpose-built camera placement for objects, paths, spaces and large exterior maps.</p>
+      </div>
+      <div className="mode-grid">
+        {modes.map(([type, title, copy, src]) => (
+          <article key={type}>
+            <ModeVisual type={type} src={src} title={title} />
+            <div className="mode-copy">
+              <h3>{title}</h3>
+              <p>{copy}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  return (
+    <section id="features" className="section features">
+      <div className="feature-intro">
+        <p className="eyebrow feature-label">What's New in 3.0</p>
+        <h2>Capture faster.<br />Iterate with control.</h2>
+      </div>
+      <article className="speed-card">
+        <span>UP TO APPROXIMATELY</span>
+        <strong>4×</strong>
+        <h3>faster image capture in tested projects</h3>
+        <p>Performance varies by scene, settings, storage and hardware.</p>
+      </article>
+      <div className="feature-cards">
+        <article>
+          <b>Movie Render Queue</b>
+          <p>Anti-aliasing, temporal and spatial sampling controls.</p>
+        </article>
+        <article>
+          <b>Oblique Capture Rig</b>
+          <p>Smart Ortho 3-View and Smart Oblique 5-View.</p>
+        </article>
+        <article>
+          <b>1-Click Pipeline</b>
+          <p>Captures, generates point cloud & colors in a single pass.</p>
+        </article>
+        <article>
+          <b>Complex Collision Sampling</b>
+          <p>Auto-engages per-poly collisions and reverts seamlessly.</p>
+        </article>
+      </div>
+      <aside className="iteration">
+        <p className="eyebrow">Iteration without a full reset</p>
+        <h3>Adjust the point-cloud stage without necessarily recapturing everything.</h3>
+        <div className="iteration-grid">
+          {iteration.map((x) => (
+            <span key={x}>{x}</span>
+          ))}
+        </div>
+      </aside>
+    </section>
+  );
+}
+
+function Compatibility() {
+  const audiences = ['Arch-viz', 'Product Visualization', 'Game Development', 'Technical Art', 'Research', '3DGS / NeRF'];
+  return (
+    <section className="section compat">
+      <div className="audience">
+        <p className="eyebrow">Built for technical workflows</p>
+        <h2>Built for technical 3D workflows.</h2>
+        <div className="audience-tags">
+          {audiences.map((x) => (
+            <span key={x}>{x}</span>
+          ))}
+        </div>
+      </div>
+      <div className="requirements">
+        <article>
+          <small>Platform</small>
+          <b>Windows</b>
+        </article>
+        <article>
+          <small>Unreal Engine</small>
+          <b>5.4 — 5.8</b>
+        </article>
+        <article>
+          <small>Required plugins</small>
+          <b>Python Editor Script Plugin</b>
+          <b>Editor Scripting Utilities</b>
+          <b>Movie Render Queue</b>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+function FAQ() {
+  const [open, setOpen] = useState(0);
+  return (
+    <section id="faq" className="section faq">
+      <div className="section-head">
+        <p className="eyebrow">FAQ</p>
+        <h2>Frequently Asked Questions</h2>
+      </div>
+      <div className="faq-list">
+        {faqs.map(([q, a], i) => (
+          <article key={q}>
+            <button onClick={() => setOpen(open === i ? -1 : i)} aria-expanded={open === i}>
+              {q}
+              <span>{open === i ? '−' : '+'}</span>
+            </button>
+            <div className={'answer ' + (open === i ? 'open' : '')}>
+              <p>{a}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <Nav />
+      <main id="top">
+        <Hero />
+        <Workflow />
+        <Showcase />
+        <CollisionFeature />
+        <Modes />
+        <Features />
+        <Compatibility />
+        <FAQ />
+        <section className="section final">
+          <p className="eyebrow">Start from the scene you already have</p>
+          <h2>Ready to turn your Unreal scene into a Gaussian Splat dataset in one click?</h2>
+          <div className="hero-actions">
+            <a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow /></a>
+            <a className="button quiet" href={DOCS} target="_blank" rel="noreferrer">Read documentation</a>
+            <a className="button quiet" href={DISCORD} target="_blank" rel="noreferrer">Join Discord</a>
+          </div>
+        </section>
+      </main>
+      <footer>
+        <Logo />
+        <p>Unreal to Gaussian Splat — 1-Click Automated COLMAP Dataset Generator</p>
+        <a href={FAB}>Fab ↗</a>
+        <a href={DOCS}>Docs ↗</a>
+        <a href={DISCORD}>Discord ↗</a>
+      </footer>
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<App />);
