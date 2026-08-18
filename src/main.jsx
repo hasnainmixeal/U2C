@@ -6,6 +6,7 @@ import './refinements.css';
 const FAB='https://www.fab.com/listings/d5ce0b45-8c80-486d-8316-882856198875';
 const DOCS='https://docs.google.com/document/d/1TI85713-m77ffLTBt8gXm0qnTO-rZNs4cMDOiOCsAPc/edit?usp=sharing';
 const DISCORD='https://discord.gg/PnuU3eW8J';
+const WALLGS_FAB='https://www.fab.com/listings/44fcdaad-8765-4479-b2cb-adf34f9c0a4d?lang=en';
 
 const scenes = [
   {
@@ -89,8 +90,8 @@ const modes = [
 
 const faqs = [
   [
-    'Does the plugin capture images, generate, and color the point cloud automatically in one click?',
-    'Yes! In a single click, Unreal to Gaussian Splat handles all three core stages: capturing the multi-view RGB images, generating the 3D point cloud via automated complex collisions, and coloring the point cloud from the captured imagery. You also have full freedom to run or reconfigure any of these stages independently.'
+    'How does Unreal to Gaussian Splat streamline dataset creation?',
+    'First, you place cameras across your scene using purpose-built camera rigs (product, path, volume, or oblique aerial). Once your cameras are placed, a single click handles the rest: rendering multi-view RGB images, calculating ground-truth camera poses, raycasting complex point clouds, and projective color sampling to export a complete COLMAP dataset.'
   ],
   [
     'How does the plugin achieve accurate point clouds without messing up my project collision?',
@@ -102,15 +103,15 @@ const faqs = [
   ],
   [
     'Does the plugin render Gaussian Splats inside Unreal Engine?',
-    'No. It is an editor-only dataset generation powerhouse designed to export perfect datasets from Unreal Engine for 3DGS training.'
+    'No. Unreal to Gaussian Splat is dedicated to exporting high-precision COLMAP datasets from your Unreal scenes. To render and interact with Gaussian Splats inside Unreal Engine, check out our companion plugin WallGS.'
   ],
   [
     'Do I need to manually align cameras in COLMAP?',
     'No! The plugin calculates mathematical ground-truth camera extrinsics and intrinsics directly from Unreal Editor, eliminating manual COLMAP feature matching, alignment failures, and hours of reconstruction time.'
   ],
   [
-    'Can I change point-cloud density after capturing images?',
-    'Yes. Version 3.0 allows you to change point-cloud density presets and re-generate or re-color point clouds directly from existing captured images without re-rendering.'
+    'Can I add more camera angles to an already generated dataset?',
+    'Yes! Unreal to Gaussian Splat supports resumable and incremental capture. You can place additional camera rigs for specific areas and capture only those new views without needing to re-capture your entire dataset from scratch.'
   ],
   [
     'Which Unreal Engine versions are supported?',
@@ -120,21 +121,6 @@ const faqs = [
     'What software can I use to train the exported dataset?',
     'Postshot, LichtFeld Studio, Nerfstudio, 3DGS official repo, and all other standard COLMAP-compatible Gaussian Splatting trainers.'
   ]
-];
-
-const iteration = [
-  '1-Click automated execution',
-  'Complex collision ray-casting',
-  'Non-destructive auto-restore',
-  'Object masking support',
-  'Add additional cameras',
-  'Preview captured views',
-  'Preview pending views',
-  'Inspect RGB images',
-  'Change density after capture',
-  'Generate independently',
-  'Color independently',
-  'Export independently'
 ];
 
 const Arrow = () => <span aria-hidden="true">→</span>;
@@ -381,7 +367,7 @@ function Nav() {
         <Logo />
         <button className="menu" onClick={() => setOpen(!open)} aria-label="Toggle navigation">☰</button>
         <div className={'navlinks ' + (open ? 'open' : '')}>
-          {[['Overview', 'overview'], ['Workflow', 'workflow'], ['Showcase', 'showcase'], ['Collision Engine', 'collision'], ['Capture Modes', 'modes'], ['Features', 'features'], ['FAQ', 'faq']].map(([a, b]) => (
+          {[['Overview', 'overview'], ['Capture Rigs', 'modes'], ['Workflow', 'workflow'], ['Showcase', 'showcase'], ['Collision Engine', 'collision'], ['Features', 'features'], ['Use Cases', 'use-cases'], ['FAQ', 'faq']].map(([a, b]) => (
             <a key={b} href={'#' + b} onClick={() => setOpen(false)}>{a}</a>
           ))}
           <a className="nav-cta" href={FAB} target="_blank" rel="noreferrer">Get on Fab <Arrow /></a>
@@ -399,7 +385,7 @@ function Hero() {
         <p className="eyebrow">Unreal to Gaussian Splat 3.0</p>
         <h1>Turn Unreal Engine scenes into <em>Gaussian Splat</em> datasets.</h1>
         <p className="lede">
-          Unreal to Gaussian Splat captures high-res images, generates precision point clouds, and colors them — <strong>all in one single click</strong> directly inside Unreal Editor. Ready for instant training in Postshot, LichtFeld Studio, or your favorite 3DGS tool.
+          Unreal to Gaussian Splat provides intuitive camera rigs for fast scene placement. Once your cameras are set, one click handles the rest — capturing high-res images, generating dense point clouds, and exporting ready-to-train COLMAP datasets directly inside Unreal Editor.
         </p>
         <div className="hero-actions">
           <a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow /></a>
@@ -409,7 +395,9 @@ function Hero() {
       <div className="hero-pipeline">
         <span>UNREAL SCENE</span>
         <i>→</i>
-        <strong title="Captures images, generates & colors point cloud in 1 click">1-CLICK PLUGIN AUTOMATION</strong>
+        <strong title="Quick camera placement with dedicated rigs">SETUP CAMERA RIGS</strong>
+        <i>→</i>
+        <strong title="Automated rendering, point cloud & COLMAP export in one pass">ONE-CLICK GENERATE</strong>
         <i>→</i>
         <span>COLMAP DATASET</span>
         <i>→</i>
@@ -423,18 +411,21 @@ function Workflow() {
   const steps = [
     {
       num: '01',
-      title: 'Capture Images',
-      desc: 'Renders crisp multi-angle RGB views and computes ground-truth COLMAP camera poses.'
+      badge: 'Rig Setup',
+      title: 'Place Camera Rigs',
+      desc: 'Use product, path, volume, or oblique aerial rigs to position cameras across your scene in minutes.'
     },
     {
       num: '02',
-      title: 'Generate Point Cloud',
-      desc: 'Auto-enables complex collision on all meshes for exact per-poly raycast sampling, then safely restores.'
+      badge: '1-Click',
+      title: 'Capture & Raycast',
+      desc: 'Renders high-res RGB frames and auto-enables complex collision for sub-millimeter geometric raycasting.'
     },
     {
       num: '03',
-      title: 'Color Point Cloud',
-      desc: 'Projectively samples colors directly from captured camera frames onto every 3D point.'
+      badge: 'Auto Export',
+      title: 'Color & COLMAP Export',
+      desc: 'Samples scene radiance onto the point cloud and outputs complete camera poses ready for training.'
     }
   ];
 
@@ -443,18 +434,18 @@ function Workflow() {
       <div className="section-head">
         <div className="workflow-badge">
           <span className="pulse-dot" />
-          <span>ALL 3 STEPS IN ONE SINGLE CLICK</span>
+          <span>STRUCTURED 3DGS WORKFLOW</span>
         </div>
-        <h2>Captures, generates, and colors the point cloud — in one click.</h2>
+        <h2>From camera placement to COLMAP dataset in 3 steps.</h2>
         <p>
-          Don't assume the plugin only takes screenshots. In a single automated pass, Unreal to Gaussian Splat executes all three essential middle steps: it captures the multi-view images, reconstructs dense geometry point clouds using complex collision raycasts, and colors every point with scene radiance.
+          Place your cameras quickly using dedicated rigs, then let Unreal to Gaussian Splat handle the heavy lifting: capturing high-res frames, generating dense geometry via complex collision raycasts, and coloring every point for 3DGS training.
         </p>
       </div>
 
       <div className="flow-wrapper">
         <div className="flow-one-click-banner">
-          <span className="banner-tag">1-CLICK AUTOMATION BY PLUGIN</span>
-          <span className="banner-sub">No manual camera alignment · No external COLMAP matching needed</span>
+          <span className="banner-tag">EFFICIENT PLUGIN WORKFLOW</span>
+          <span className="banner-sub">Camera Rig Placement → One-Click Automated Capture & COLMAP Dataset</span>
         </div>
         <div className="flow">
           <div className="endpoint cyan">
@@ -467,7 +458,7 @@ function Workflow() {
               <article className="flow-step highlighted-step">
                 <div className="step-top">
                   <b>{s.num}</b>
-                  <span className="step-badge">Auto</span>
+                  <span className="step-badge">{s.badge}</span>
                 </div>
                 <h3>{s.title}</h3>
                 <p>{s.desc}</p>
@@ -482,35 +473,35 @@ function Workflow() {
         </div>
       </div>
 
-      {/* Hero Point: Full Independent Stage Flexibility */}
+      {/* Resumable & Incremental Dataset Capture */}
       <div className="workflow-hero-feature">
         <div className="hero-feature-left">
-          <span className="hero-feature-badge">NON-DESTRUCTIVE CONTROL</span>
-          <h3>Adjust or Re-run Any Stage Independently</h3>
+          <span className="hero-feature-badge">RESUMABLE CAPTURE</span>
+          <h3>Add More Data to Existing Datasets Anytime</h3>
           <p>
-            You are never locked into an all-or-nothing pipeline. Need a denser point cloud? Want to add new cameras or re-sample colors under different lighting? You can trigger, fine-tune, or re-run <strong>any individual stage independently</strong> without re-rendering or re-capturing your scene from scratch.
+            Missed a critical angle or need extra fidelity in a specific spot? You never have to re-render or restart from scratch. With incremental capture, simply place new cameras where needed and capture only that specific part to expand your existing COLMAP dataset seamlessly.
           </p>
         </div>
         <div className="hero-feature-pills">
           <div className="hero-pill-item">
-            <span className="pill-icon">🔄</span>
+            <span className="pill-icon">🎯</span>
             <div>
-              <b>Change Density After Capture</b>
-              <small>Re-generate point cloud density instantly from already captured RGB views.</small>
-            </div>
-          </div>
-          <div className="hero-pill-item">
-            <span className="pill-icon">🎨</span>
-            <div>
-              <b>Independent Point Coloring</b>
-              <small>Re-color points with fresh camera passes without recalculating 3D geometry.</small>
+              <b>Target Specific Areas</b>
+              <small>Capture only newly added camera views without touching or re-rendering existing data.</small>
             </div>
           </div>
           <div className="hero-pill-item">
             <span className="pill-icon">⚡</span>
             <div>
-              <b>Zero Recapture Penalty</b>
-              <small>Iterate in seconds and save hours of rendering time on large scenes.</small>
+              <b>Zero Full Recapture Penalty</b>
+              <small>Append new images and points directly into your dataset, saving hours on large scenes.</small>
+            </div>
+          </div>
+          <div className="hero-pill-item">
+            <span className="pill-icon">🔄</span>
+            <div>
+              <b>Resumable Iteration</b>
+              <small>Continuously refine and expand datasets across multiple sessions as your scene evolves.</small>
             </div>
           </div>
         </div>
@@ -750,9 +741,9 @@ function Modes() {
   return (
     <section id="modes" className="section modes">
       <div className="section-head">
-        <p className="eyebrow">Capture modes</p>
-        <h2>Build a capture plan that matches the scene.</h2>
-        <p>Purpose-built camera placement for objects, paths, spaces and large exterior maps.</p>
+        <p className="eyebrow">Camera Rigs & Capture Options</p>
+        <h2>Build a capture plan that matches your scene.</h2>
+        <p>Purpose-built camera placement rigs for objects, paths, rooms, and large exterior maps — saving you hours of manual camera positioning.</p>
       </div>
       <div className="mode-grid">
         {modes.map(([type, title, copy, src]) => (
@@ -792,33 +783,27 @@ function Features() {
           <p>Smart Ortho 3-View and Smart Oblique 5-View.</p>
         </article>
         <article>
-          <b>1-Click Pipeline</b>
-          <p>Captures, generates point cloud & colors in a single pass.</p>
-        </article>
-        <article>
-          <b>Complex Collision Sampling</b>
-          <p>Auto-engages per-poly collisions and reverts seamlessly.</p>
+          <b>Automated Dataset Pipeline</b>
+          <p>Multi-angle capture, point cloud generation & radiance coloring in one pass.</p>
         </article>
       </div>
       <aside className="iteration">
-        <p className="eyebrow">Iteration without a full reset</p>
-        <h3>Adjust the point-cloud stage without necessarily recapturing everything.</h3>
-        <div className="iteration-grid">
-          {iteration.map((x) => (
-            <span key={x}>{x}</span>
-          ))}
-        </div>
+        <p className="eyebrow">Incremental Capture</p>
+        <h3>Expand scene coverage without recapturing everything.</h3>
+        <p className="iteration-desc">
+          Version 3.0 lets you append new cameras and capture missing angles without starting over. Seamlessly update existing datasets while preserving your previous renders and point cloud data.
+        </p>
       </aside>
     </section>
   );
 }
 
-function Compatibility() {
-  const audiences = ['Arch-viz', 'Product Visualization', 'Game Development', 'Technical Art', 'Research', '3DGS / NeRF'];
+function UseCases() {
+  const audiences = ['Arch-viz', 'Product Visualization', 'Game Development', 'Technical Art', 'Virtual Production', '3DGS / NeRF Research'];
   return (
-    <section className="section compat">
+    <section id="use-cases" className="section compat">
       <div className="audience">
-        <p className="eyebrow">Built for technical workflows</p>
+        <p className="eyebrow">Use cases</p>
         <h2>Built for technical 3D workflows.</h2>
         <div className="audience-tags">
           {audiences.map((x) => (
@@ -835,12 +820,34 @@ function Compatibility() {
           <small>Unreal Engine</small>
           <b>5.4 — 5.8</b>
         </article>
-        <article>
-          <small>Required plugins</small>
-          <b>Python Editor Script Plugin</b>
-          <b>Editor Scripting Utilities</b>
-          <b>Movie Render Queue</b>
-        </article>
+      </div>
+    </section>
+  );
+}
+
+function CompanionPlugin() {
+  return (
+    <section className="section companion-section">
+      <div className="companion-card">
+        <div className="companion-media">
+          <img
+            src="./wallgs-thumbnail.webp"
+            alt="WallGS - Render Gaussian Splats inside Unreal Engine"
+            loading="lazy"
+          />
+        </div>
+        <div className="companion-content">
+          <p className="companion-eyebrow">/ COMPANION WORKFLOW</p>
+          <h2>Looking to render Gaussian splats inside Unreal Engine instead?</h2>
+          <p className="companion-desc">
+            WallGS gives you the tools you need to import and render 3D Gaussian Splats directly inside Unreal Engine with high real-time performance and seamless scene integration.
+          </p>
+          <div className="companion-actions">
+            <a className="companion-btn" href={WALLGS_FAB} target="_blank" rel="noreferrer">
+              Get the plugin on Fab ↗
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -877,16 +884,20 @@ function App() {
       <Nav />
       <main id="top">
         <Hero />
+        <Modes />
         <Workflow />
         <Showcase />
         <CollisionFeature />
-        <Modes />
         <Features />
-        <Compatibility />
+        <UseCases />
+        <CompanionPlugin />
         <FAQ />
         <section className="section final">
-          <p className="eyebrow">Start from the scene you already have</p>
-          <h2>Ready to turn your Unreal scene into a Gaussian Splat dataset in one click?</h2>
+          <p className="eyebrow">Speed up your 3DGS pipeline</p>
+          <h2>Ready to turn your Unreal scenes into Gaussian Splat datasets?</h2>
+          <p className="final-sub">
+            Set up camera rigs in minutes, generate COLMAP datasets with one click, and train high-fidelity Gaussian Splats in Postshot, LichtFeld Studio, or your favorite 3DGS trainer.
+          </p>
           <div className="hero-actions">
             <a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow /></a>
             <a className="button quiet" href={DOCS} target="_blank" rel="noreferrer">Read documentation</a>
@@ -896,7 +907,7 @@ function App() {
       </main>
       <footer>
         <Logo />
-        <p>Unreal to Gaussian Splat — 1-Click Automated COLMAP Dataset Generator</p>
+        <p>Unreal to Gaussian Splat — Camera Rigs & Automated COLMAP Dataset Generator</p>
         <a href={FAB}>Fab ↗</a>
         <a href={DOCS}>Docs ↗</a>
         <a href={DISCORD}>Discord ↗</a>
