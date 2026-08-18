@@ -367,7 +367,7 @@ function Nav() {
         <Logo />
         <button className="menu" onClick={() => setOpen(!open)} aria-label="Toggle navigation">☰</button>
         <div className={'navlinks ' + (open ? 'open' : '')}>
-          {[['Overview', 'overview'], ['Capture Rigs', 'modes'], ['Workflow', 'workflow'], ['Showcase', 'showcase'], ['Collision Engine', 'collision'], ['Features', 'features'], ['Use Cases', 'use-cases'], ['FAQ', 'faq']].map(([a, b]) => (
+          {[['Overview', 'overview'], ['Workflow', 'workflow'], ['Capture Rigs', 'modes'], ['Showcase', 'showcase'], ['Collision Engine', 'collision'], ['Features', 'features'], ['Use Cases', 'use-cases'], ['FAQ', 'faq']].map(([a, b]) => (
             <a key={b} href={'#' + b} onClick={() => setOpen(false)}>{a}</a>
           ))}
           <a className="nav-cta" href={FAB} target="_blank" rel="noreferrer">Get on Fab <Arrow /></a>
@@ -385,7 +385,7 @@ function Hero() {
         <p className="eyebrow">Unreal to Gaussian Splat 3.0</p>
         <h1>Turn Unreal Engine scenes into <em>Gaussian Splat</em> datasets.</h1>
         <p className="lede">
-          Unreal to Gaussian Splat provides intuitive camera rigs for fast scene placement. Once your cameras are set, one click handles the rest — capturing high-res images, generating dense point clouds, and exporting ready-to-train COLMAP datasets directly inside Unreal Editor.
+          Unreal to Gaussian Splat turns your scenes into 3DGS-ready datasets in just two steps: set up your cameras with intuitive rigs, then click Generate once. The plugin handles the rest — capturing images, raycasting dense point clouds, coloring points, and exporting complete COLMAP files ready for instant training.
         </p>
         <div className="hero-actions">
           <a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow /></a>
@@ -395,9 +395,9 @@ function Hero() {
       <div className="hero-pipeline">
         <span>UNREAL SCENE</span>
         <i>→</i>
-        <strong title="Quick camera placement with dedicated rigs">SETUP CAMERA RIGS</strong>
+        <strong title="Distribute and configure cameras in minutes">01. SETUP CAMERA RIGS</strong>
         <i>→</i>
-        <strong title="Automated rendering, point cloud & COLMAP export in one pass">ONE-CLICK GENERATE</strong>
+        <strong title="Automated image capture, point cloud & COLMAP export in one pass">02. ONE-CLICK GENERATE</strong>
         <i>→</i>
         <span>COLMAP DATASET</span>
         <i>→</i>
@@ -408,101 +408,57 @@ function Hero() {
 }
 
 function Workflow() {
-  const steps = [
-    {
-      num: '01',
-      badge: 'Rig Setup',
-      title: 'Place Camera Rigs',
-      desc: 'Use product, path, volume, or oblique aerial rigs to position cameras across your scene in minutes.'
-    },
-    {
-      num: '02',
-      badge: '1-Click',
-      title: 'Capture & Raycast',
-      desc: 'Renders high-res RGB frames and auto-enables complex collision for sub-millimeter geometric raycasting.'
-    },
-    {
-      num: '03',
-      badge: 'Auto Export',
-      title: 'Color & COLMAP Export',
-      desc: 'Samples scene radiance onto the point cloud and outputs complete camera poses ready for training.'
-    }
-  ];
-
   return (
     <section id="workflow" className="section workflow">
       <div className="section-head">
         <div className="workflow-badge">
           <span className="pulse-dot" />
-          <span>STRUCTURED 3DGS WORKFLOW</span>
+          <span>TWO STEPS · 1-CLICK GENERATE</span>
         </div>
-        <h2>From camera placement to COLMAP dataset in 3 steps.</h2>
+        <h2>From Unreal scene to COLMAP dataset in 2 steps.</h2>
         <p>
-          Place your cameras quickly using dedicated rigs, then let Unreal to Gaussian Splat handle the heavy lifting: capturing high-res frames, generating dense geometry via complex collision raycasts, and coloring every point for 3DGS training.
+          Set up your camera rigs, click Generate, and let the plugin handle everything else — image capture, geometry sampling, point-cloud generation, coloring, COLMAP metadata, and export.
         </p>
       </div>
 
       <div className="flow-wrapper">
         <div className="flow-one-click-banner">
-          <span className="banner-tag">EFFICIENT PLUGIN WORKFLOW</span>
-          <span className="banner-sub">Camera Rig Placement → One-Click Automated Capture & COLMAP Dataset</span>
+          <span className="banner-tag">TWO-STEP WORKFLOW</span>
+          <span className="banner-sub">Position Cameras → One Click → Ready-to-Train COLMAP Dataset</span>
         </div>
         <div className="flow">
           <div className="endpoint cyan">
             Unreal Engine
-            <small>Your 3D Scene</small>
+            <small>Active 3D Scene</small>
           </div>
-          {steps.map((s) => (
-            <React.Fragment key={s.num}>
-              <i className="connector">→</i>
-              <article className="flow-step highlighted-step">
-                <div className="step-top">
-                  <b>{s.num}</b>
-                  <span className="step-badge">{s.badge}</span>
-                </div>
-                <h3>{s.title}</h3>
-                <p>{s.desc}</p>
-              </article>
-            </React.Fragment>
-          ))}
+          <i className="connector">→</i>
+          <article className="flow-step highlighted-step">
+            <div className="step-top">
+              <b>01</b>
+              <span className="step-badge">Manual Setup</span>
+            </div>
+            <h3>Set Up Camera Rigs</h3>
+            <p>Position and configure purpose-built camera rigs across your scene until you are satisfied with coverage.</p>
+          </article>
+          <i className="connector">→</i>
+          <article className="flow-step highlighted-step step-automated-card">
+            <div className="step-top">
+              <b>02</b>
+              <span className="step-badge lime-badge">1-Click Automation</span>
+            </div>
+            <h3>Generate Dataset — One Click</h3>
+            <p>Press Generate once. The plugin automatically executes the complete background pipeline:</p>
+            <div className="automated-substeps">
+              <div className="substep-item"><span className="dot" />📸 Capture Multi-View RGB</div>
+              <div className="substep-item"><span className="dot" />🎯 Complex Collision Raycasts</div>
+              <div className="substep-item"><span className="dot" />☁️ Dense Point Cloud & Color</div>
+              <div className="substep-item"><span className="dot" />📁 COLMAP Files & Export</div>
+            </div>
+          </article>
           <i className="connector">→</i>
           <div className="endpoint lime">
             COLMAP Dataset
             <small>Ready to Train</small>
-          </div>
-        </div>
-      </div>
-
-      {/* Resumable & Incremental Dataset Capture */}
-      <div className="workflow-hero-feature">
-        <div className="hero-feature-left">
-          <span className="hero-feature-badge">RESUMABLE CAPTURE</span>
-          <h3>Add More Data to Existing Datasets Anytime</h3>
-          <p>
-            Missed a critical angle or need extra fidelity in a specific spot? You never have to re-render or restart from scratch. With incremental capture, simply place new cameras where needed and capture only that specific part to expand your existing COLMAP dataset seamlessly.
-          </p>
-        </div>
-        <div className="hero-feature-pills">
-          <div className="hero-pill-item">
-            <span className="pill-icon">🎯</span>
-            <div>
-              <b>Target Specific Areas</b>
-              <small>Capture only newly added camera views without touching or re-rendering existing data.</small>
-            </div>
-          </div>
-          <div className="hero-pill-item">
-            <span className="pill-icon">⚡</span>
-            <div>
-              <b>Zero Full Recapture Penalty</b>
-              <small>Append new images and points directly into your dataset, saving hours on large scenes.</small>
-            </div>
-          </div>
-          <div className="hero-pill-item">
-            <span className="pill-icon">🔄</span>
-            <div>
-              <b>Resumable Iteration</b>
-              <small>Continuously refine and expand datasets across multiple sessions as your scene evolves.</small>
-            </div>
           </div>
         </div>
       </div>
@@ -788,23 +744,54 @@ function Features() {
         </article>
       </div>
       <aside className="iteration">
-        <p className="eyebrow">Incremental Capture</p>
-        <h3>Expand scene coverage without recapturing everything.</h3>
-        <p className="iteration-desc">
-          Version 3.0 lets you append new cameras and capture missing angles without starting over. Seamlessly update existing datasets while preserving your previous renders and point cloud data.
-        </p>
+        <div>
+          <p className="eyebrow">Smart Workflow</p>
+          <h3>Expand scene coverage without recapturing everything.</h3>
+        </div>
+        <div className="iteration-feature-list">
+          <div className="iter-card">
+            <span className="iter-card-icon">🎯</span>
+            <div>
+              <b>Incremental Additions</b>
+              <small>Place new camera angles for specific areas without re-rendering existing views.</small>
+            </div>
+          </div>
+          <div className="iter-card">
+            <span className="iter-card-icon">🔄</span>
+            <div>
+              <b>Resumable Dataset Expansion</b>
+              <small>Seamlessly merge new images and point cloud data into your existing COLMAP files.</small>
+            </div>
+          </div>
+          <div className="iter-card">
+            <span className="iter-card-icon">⚡</span>
+            <div>
+              <b>Zero Recapture Penalty</b>
+              <small>Save hours of rendering on large environments by updating only what changed.</small>
+            </div>
+          </div>
+        </div>
       </aside>
     </section>
   );
 }
 
 function UseCases() {
-  const audiences = ['Arch-viz', 'Product Visualization', 'Game Development', 'Technical Art', 'Virtual Production', '3DGS / NeRF Research'];
+  const audiences = [
+    'Arch-viz',
+    'Product Visualization',
+    'Game Development',
+    'Technical Art',
+    'Virtual Production',
+    '3DGS / NeRF Research'
+  ];
   return (
     <section id="use-cases" className="section compat">
       <div className="audience">
-        <p className="eyebrow">Use cases</p>
-        <h2>Built for technical 3D workflows.</h2>
+        <h2>Use cases</h2>
+        <p className="usecases-sub">
+          Purpose-built for technical 3D artists, game developers, arch-viz studios, and researchers.
+        </p>
         <div className="audience-tags">
           {audiences.map((x) => (
             <span key={x}>{x}</span>
@@ -812,13 +799,24 @@ function UseCases() {
         </div>
       </div>
       <div className="requirements">
+        <div className="req-header">
+          <span className="req-badge">SYSTEM SPECS & COMPATIBILITY</span>
+        </div>
         <article>
           <small>Platform</small>
-          <b>Windows</b>
+          <b>Windows 10 / 11 (64-bit)</b>
         </article>
         <article>
           <small>Unreal Engine</small>
-          <b>5.4 — 5.8</b>
+          <b>5.4 · 5.5 · 5.6 · 5.7 · 5.8</b>
+        </article>
+        <article>
+          <small>Dataset Output</small>
+          <b>Standard COLMAP Dataset (Images, Cameras, Points3D)</b>
+        </article>
+        <article>
+          <small>Compatible Trainers</small>
+          <b>Postshot · LichtFeld Studio · Nerfstudio · 3DGS</b>
         </article>
       </div>
     </section>
@@ -884,8 +882,8 @@ function App() {
       <Nav />
       <main id="top">
         <Hero />
-        <Modes />
         <Workflow />
+        <Modes />
         <Showcase />
         <CollisionFeature />
         <Features />
