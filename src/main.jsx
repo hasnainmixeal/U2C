@@ -719,16 +719,18 @@ function Modes() {
 function Features() {
   return (
     <section id="features" className="section features">
-      <div className="feature-intro">
-        <p className="eyebrow feature-label">What's New in 3.0</p>
-        <h2>Capture faster.<br />Iterate with control.</h2>
+      <div className="feature-top-row">
+        <div className="feature-intro">
+          <p className="eyebrow feature-label">What's New in 3.0</p>
+          <h2>Capture faster.<br />Iterate with control.</h2>
+        </div>
+        <article className="speed-card">
+          <span>UP TO APPROXIMATELY</span>
+          <strong>4×</strong>
+          <h3>faster image capture in tested projects</h3>
+          <p>Performance varies by scene, settings, storage and hardware.</p>
+        </article>
       </div>
-      <article className="speed-card">
-        <span>UP TO APPROXIMATELY</span>
-        <strong>4×</strong>
-        <h3>faster image capture in tested projects</h3>
-        <p>Performance varies by scene, settings, storage and hardware.</p>
-      </article>
       <div className="feature-cards">
         <article>
           <b>Movie Render Queue</b>
@@ -743,81 +745,88 @@ function Features() {
           <p>Multi-angle capture, point cloud generation & radiance coloring in one pass.</p>
         </article>
       </div>
-      <aside className="iteration">
-        <div>
-          <p className="eyebrow">Smart Workflow</p>
-          <h3>Expand scene coverage without recapturing everything.</h3>
+    </section>
+  );
+}
+
+function IncrementalCapture() {
+  return (
+    <section className="section incremental-section">
+      <div className="incremental-banner">
+        <div className="incremental-left">
+          <span className="incremental-badge">SMART WORKFLOW</span>
+          <h2>Expand scene coverage without recapturing everything.</h2>
+          <p className="incremental-desc">
+            Version 3.0 lets you append new cameras and capture missing angles without starting over. Seamlessly update existing datasets while preserving your previous renders and point cloud data.
+          </p>
         </div>
-        <div className="iteration-feature-list">
-          <div className="iter-card">
-            <span className="iter-card-icon">🎯</span>
-            <div>
+        <div className="incremental-cards">
+          <div className="inc-card">
+            <span className="inc-icon">🎯</span>
+            <div className="inc-content">
               <b>Incremental Additions</b>
-              <small>Place new camera angles for specific areas without re-rendering existing views.</small>
+              <p>Place new camera angles for specific areas without re-rendering existing views.</p>
             </div>
           </div>
-          <div className="iter-card">
-            <span className="iter-card-icon">🔄</span>
-            <div>
+          <div className="inc-card">
+            <span className="inc-icon">🔄</span>
+            <div className="inc-content">
               <b>Resumable Dataset Expansion</b>
-              <small>Seamlessly merge new images and point cloud data into your existing COLMAP files.</small>
+              <p>Seamlessly merge new images and point cloud data into your existing COLMAP files.</p>
             </div>
           </div>
-          <div className="iter-card">
-            <span className="iter-card-icon">⚡</span>
-            <div>
+          <div className="inc-card">
+            <span className="inc-icon">⚡</span>
+            <div className="inc-content">
               <b>Zero Recapture Penalty</b>
-              <small>Save hours of rendering on large environments by updating only what changed.</small>
+              <p>Save hours of rendering on large environments by updating only what changed.</p>
             </div>
           </div>
         </div>
-      </aside>
+      </div>
     </section>
   );
 }
 
 function UseCases() {
-  const audiences = [
-    'Arch-viz',
-    'Product Visualization',
-    'Game Development',
-    'Technical Art',
-    'Virtual Production',
-    '3DGS / NeRF Research'
+  const useCases = [
+    { title: 'Arch-viz & Architecture', desc: 'Convert interactive architectural walkthroughs and BIM spaces into photorealistic 3DGS datasets for web and client presentation.' },
+    { title: 'Product Visualization', desc: 'Capture turntable rigs and multi-angle studio lighting setups to generate pristine 3D product splats.' },
+    { title: 'Game Development', desc: 'Turn complex level designs and modular environments into optimized Gaussian splat backgrounds and cinematics.' },
+    { title: 'Technical Art & VFX', desc: 'Sample exact sub-millimeter geometry with complex collision for production-grade radiance fields.' },
+    { title: 'Virtual Production', desc: 'Generate high-fidelity virtual background splats from Unreal LED volume stages and virtual sets.' },
+    { title: '3DGS & NeRF Research', desc: 'Export standardized COLMAP datasets with camera intrinsics and extrinsics for academic and industry research.' }
   ];
+
   return (
-    <section id="use-cases" className="section compat">
-      <div className="audience">
+    <section id="use-cases" className="section use-cases">
+      <div className="section-head">
         <h2>Use cases</h2>
         <p className="usecases-sub">
-          Purpose-built for technical 3D artists, game developers, arch-viz studios, and researchers.
+          Purpose-built for technical 3D artists, game developers, arch-viz studios, and researchers capturing real-time Gaussian Splats directly from Unreal Engine.
         </p>
-        <div className="audience-tags">
-          {audiences.map((x) => (
-            <span key={x}>{x}</span>
-          ))}
-        </div>
       </div>
-      <div className="requirements">
-        <div className="req-header">
-          <span className="req-badge">SYSTEM SPECS & COMPATIBILITY</span>
+      <div className="use-cases-grid">
+        {useCases.map((u) => (
+          <article key={u.title} className="use-case-card">
+            <h3>{u.title}</h3>
+            <p>{u.desc}</p>
+          </article>
+        ))}
+      </div>
+      <div className="engine-support-bar">
+        <div className="engine-support-label">
+          <span className="pulse-dot cyan-dot" />
+          <span>SUPPORTED UNREAL ENGINE VERSIONS</span>
         </div>
-        <article>
-          <small>Platform</small>
-          <b>Windows 10 / 11 (64-bit)</b>
-        </article>
-        <article>
-          <small>Unreal Engine</small>
-          <b>5.4 · 5.5 · 5.6 · 5.7 · 5.8</b>
-        </article>
-        <article>
-          <small>Dataset Output</small>
-          <b>Standard COLMAP Dataset (Images, Cameras, Points3D)</b>
-        </article>
-        <article>
-          <small>Compatible Trainers</small>
-          <b>Postshot · LichtFeld Studio · Nerfstudio · 3DGS</b>
-        </article>
+        <div className="engine-chips">
+          <span>UE 5.4</span>
+          <span>UE 5.5</span>
+          <span>UE 5.6</span>
+          <span>UE 5.7</span>
+          <span>UE 5.8</span>
+        </div>
+        <span className="engine-os">Windows 10 / 11 · 64-bit</span>
       </div>
     </section>
   );
@@ -887,6 +896,7 @@ function App() {
         <Showcase />
         <CollisionFeature />
         <Features />
+        <IncrementalCapture />
         <UseCases />
         <CompanionPlugin />
         <FAQ />
