@@ -78,6 +78,27 @@ const scenes = [
     author: 'Walhar Gohar',
     thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/9ae3b553/v1/xl.webp',
     mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/9ae3b553/v1/mov.webp'
+  },
+  {
+    id: '4a4aa437',
+    title: 'Algets',
+    author: 'Walhar Gohar',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/4a4aa437/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/4a4aa437/v1/mov.webp'
+  },
+  {
+    id: 'dcf4cfa7',
+    title: 'Studio Apartment',
+    author: 'Goce Milanoski',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/dcf4cfa7/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/dcf4cfa7/v1/mov.webp'
+  },
+  {
+    id: 'f5556915',
+    title: 'YTM Test Scene',
+    author: 'Nazeer Sany',
+    thumb: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/f5556915/v1/xl.webp',
+    mov: 'https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/splat/f5556915/v1/mov.webp'
   }
 ];
 
@@ -387,6 +408,10 @@ function Hero() {
         <p className="lede">
           Unreal to Gaussian Splat turns your scenes into 3DGS-ready datasets in just two steps: set up your cameras with intuitive rigs, then click Generate once. The plugin handles the rest — capturing images, raycasting dense point clouds, coloring points, and exporting complete COLMAP files ready for instant training.
         </p>
+        <div className="hero-engine-tag">
+          <span className="pulse-dot cyan-dot" />
+          <span>For UE 5.4 - 5.8</span>
+        </div>
         <div className="hero-actions">
           <a className="button primary" href={FAB} target="_blank" rel="noreferrer">Get it on Fab <Arrow /></a>
           <a className="button quiet" href="#showcase">Explore user splats <Arrow /></a>
