@@ -750,7 +750,7 @@ function Features() {
     <section id="features" className="section features">
       <div className="feature-top-row">
         <div className="feature-intro">
-          <p className="eyebrow feature-label">What's New & Upcoming</p>
+          <p className="eyebrow feature-label">What's New in 3.0</p>
           <h2>Capture faster.<br />Iterate with control.</h2>
         </div>
         <article className="speed-card">
