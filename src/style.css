@@ -155,6 +155,13 @@ header{position:sticky;top:0;z-index:20;height:68px;border-bottom:1px solid rgba
 .feature-cards article:hover{background:var(--panel2)}
 .feature-cards b{font-size:16px}
 .feature-cards p{color:var(--muted);font-size:12px}
+.upcoming-feature-banner{margin-top:24px;padding:24px 28px;background:linear-gradient(135deg,rgba(88,229,255,.06) 0%,rgba(12,17,20,.95) 100%);border:1px solid rgba(88,229,255,.3);border-radius:6px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;transition:border-color .25s,box-shadow .25s}
+.upcoming-feature-banner:hover{border-color:var(--cyan);box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 25px rgba(88,229,255,.1)}
+.upcoming-feature-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(88,229,255,.12);border:1px solid var(--cyan);color:var(--cyan);font:600 11px 'DM Mono',monospace;letter-spacing:.12em;text-transform:uppercase;border-radius:3px;white-space:nowrap}
+.upcoming-feature-content{flex:1;min-width:280px}
+.upcoming-feature-content h3{margin:0 0 6px;font-size:clamp(18px,1.6vw,22px);color:var(--text);letter-spacing:-.03em}
+.upcoming-feature-content p{margin:0;color:#bcc9c7;font-size:13px;line-height:1.55}
+.upcoming-feature-content strong{color:var(--cyan)}
 
 /* Incremental Capture Dedicated Section */
 .incremental-section{border-top:1px solid var(--line);padding:clamp(60px,8vw,110px) var(--pad);background:#090e10}

@@ -139,6 +139,10 @@ const faqs = [
     'Windows with Unreal Engine 5.4, 5.5, 5.6, 5.7, and 5.8.'
   ],
   [
+    'Will Lumen and Path Tracing be supported?',
+    'Yes! The next update is coming with full support for both Lumen dynamic global illumination and Path Tracing.'
+  ],
+  [
     'What software can I use to train the exported dataset?',
     'Postshot, LichtFeld Studio, Nerfstudio, 3DGS official repo, and all other standard COLMAP-compatible Gaussian Splatting trainers.'
   ]
@@ -746,7 +750,7 @@ function Features() {
     <section id="features" className="section features">
       <div className="feature-top-row">
         <div className="feature-intro">
-          <p className="eyebrow feature-label">What's New in 3.0</p>
+          <p className="eyebrow feature-label">What's New & Upcoming</p>
           <h2>Capture faster.<br />Iterate with control.</h2>
         </div>
         <article className="speed-card">
@@ -769,6 +773,18 @@ function Features() {
           <b>Automated Dataset Pipeline</b>
           <p>Multi-angle capture, point cloud generation & radiance coloring in one pass.</p>
         </article>
+      </div>
+      <div className="upcoming-feature-banner">
+        <div className="upcoming-feature-badge">
+          <span className="pulse-dot cyan-dot" />
+          <span>NEXT UPDATE</span>
+        </div>
+        <div className="upcoming-feature-content">
+          <h3>Both Lumen & Path Tracing Support</h3>
+          <p>
+            The next update is coming with full support for both <strong>Lumen</strong> dynamic global illumination & reflections and <strong>Path Tracing</strong> for high-accuracy ground-truth dataset generation.
+          </p>
+        </div>
       </div>
     </section>
   );
