@@ -855,20 +855,6 @@ function UseCases() {
           </article>
         ))}
       </div>
-      <div className="engine-support-bar">
-        <div className="engine-support-label">
-          <span className="pulse-dot cyan-dot" />
-          <span>SUPPORTED UNREAL ENGINE VERSIONS</span>
-        </div>
-        <div className="engine-chips">
-          <span>UE 5.4</span>
-          <span>UE 5.5</span>
-          <span>UE 5.6</span>
-          <span>UE 5.7</span>
-          <span>UE 5.8</span>
-        </div>
-        <span className="engine-os">Windows 10 / 11 · 64-bit</span>
-      </div>
     </section>
   );
 }
