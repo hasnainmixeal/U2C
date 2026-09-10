@@ -36,4 +36,22 @@ for (const file of newAssets) {
   await copyFile(path.join(distAssetsDir, file), path.join(assetsDir, file));
 }
 
+// Ensure hero-viewer exists at root for GitHub Pages serving from /
+const rootHeroViewerDir = path.join(rootDir, 'hero-viewer');
+await mkdir(rootHeroViewerDir, { recursive: true });
+await copyFile(path.join(rootDir, 'public/hero-viewer/index.html'), path.join(rootHeroViewerDir, 'index.html'));
+await copyFile(path.join(rootDir, 'public/hero-viewer/index.js'), path.join(rootHeroViewerDir, 'index.js'));
+
+// Ensure the SOG model files exist at root for GitHub Pages
+await copyFile(
+  path.join(rootDir, 'public/apollo-moon-lander-astronaut.sog'),
+  path.join(rootDir, 'apollo-moon-lander-astronaut.sog')
+);
+if (await readdir(path.join(rootDir, 'public')).then(f => f.includes('Apollo Moon Lander- Astronaut.sog'))) {
+  await copyFile(
+    path.join(rootDir, 'public/Apollo Moon Lander- Astronaut.sog'),
+    path.join(rootDir, 'Apollo Moon Lander- Astronaut.sog')
+  );
+}
+
 console.log('Build completed and deployed to root successfully!');

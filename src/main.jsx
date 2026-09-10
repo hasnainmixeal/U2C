@@ -437,24 +437,14 @@ function Hero() {
 }
 
 function HeroSplat() {
-  const [loaded, setLoaded] = useState(false);
-
   return (
-    <div className="hero-splat" aria-label="Interactive Apollo Moon Lander Gaussian splat">
-      {!loaded && (
-        <div className="hero-splat-loading" aria-live="polite">
-          <span />
-          Loading interactive splat
-        </div>
-      )}
+    <div className="hero-splat">
       <iframe
-        title="Apollo Moon Lander and astronaut — interactive Gaussian splat"
+        title="Apollo Moon Lander Gaussian Splat"
         src="./hero-viewer/index.html?noui&noanim"
         allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope"
         loading="eager"
-        onLoad={() => setLoaded(true)}
       />
-      <div className="hero-splat-hint">Drag to rotate · Scroll to zoom</div>
     </div>
   );
 }
