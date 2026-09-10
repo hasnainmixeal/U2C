@@ -463,7 +463,7 @@ function HeroSplat() {
         vec4 pos = u_matrix * vec4(a_position, 1.0);
         gl_Position = pos;
         float psize = a_size * u_pointScale / max(0.1, pos.w);
-        gl_PointSize = clamp(psize, 2.0, 28.0);
+        gl_PointSize = clamp(psize, 2.0, 160.0);
         v_color = vec4(a_color.rgb / 255.0, a_color.a / 255.0);
       }
     `;
@@ -476,8 +476,17 @@ function HeroSplat() {
         vec2 coord = gl_PointCoord - vec2(0.5);
         float distSq = dot(coord, coord);
         if (distSq > 0.25) discard;
-        float alpha = exp(-distSq * 7.0) * v_color.a;
-        if (alpha < 0.015) discard;
+
+        // Normalized radial distance from 0 (center) to 1 (outer edge)
+        float r = sqrt(distSq) * 2.0;
+
+        // True Gaussian profile with dense, solid core
+        float g = exp(-r * r * 2.8);
+
+        // Density curve to guarantee solid, non-transparent surface coverage
+        float alpha = clamp(v_color.a * 2.4 * g, 0.0, 1.0);
+        if (alpha < 0.02) discard;
+
         gl_FragColor = vec4(v_color.rgb * alpha, alpha);
       }
     `;
@@ -531,9 +540,9 @@ function HeroSplat() {
       })
       .catch(err => console.error('Failed to load splat data:', err));
 
-    let rotY = 0.25;
-    let rotX = 0.08;
-    let distance = 1.95;
+    let rotY = Math.PI + 0.85;
+    let rotX = 0.05;
+    const distance = 3.65; // Fixed scale, zero zoom functionality as requested
     let isDragging = false;
     let lastX = 0, lastY = 0;
     let resumeIdleAt = 0;
@@ -549,29 +558,29 @@ function HeroSplat() {
       if (!isDragging) return;
       const dx = e.clientX - lastX;
       const dy = e.clientY - lastY;
-      rotY += dx * 0.007;
-      rotX = Math.max(-0.6, Math.min(0.7, rotX + dy * 0.007));
+      // Inverted so dragging left rotates the model left
+      rotY -= dx * 0.006;
+      rotX = Math.max(-0.65, Math.min(0.7, rotX + dy * 0.006));
       lastX = e.clientX;
       lastY = e.clientY;
     };
 
-    const stopDrag = () => {
+    const stopDrag = (e) => {
       if (isDragging) {
         isDragging = false;
+        try {
+          if (e && e.pointerId && canvas.hasPointerCapture?.(e.pointerId)) {
+            canvas.releasePointerCapture(e.pointerId);
+          }
+        } catch {}
         resumeIdleAt = performance.now() + 1500;
       }
-    };
-
-    const onWheel = (e) => {
-      distance = Math.max(1.3, Math.min(3.2, distance + e.deltaY * 0.0015));
-      resumeIdleAt = performance.now() + 1500;
     };
 
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', stopDrag);
     canvas.addEventListener('pointercancel', stopDrag);
-    canvas.addEventListener('wheel', onWheel, { passive: true });
 
     function mat4Perspective(out, fovy, aspect, near, far) {
       const f = 1.0 / Math.tan(fovy / 2);
@@ -650,8 +659,8 @@ function HeroSplat() {
     function sortSplats(viewMatrix) {
       const vzx = viewMatrix[2], vzy = viewMatrix[6], vzz = viewMatrix[10];
       bucketCounts.fill(0);
-      const zMin = -3.0;
-      const zRange = 3.0;
+      const zMin = -2.0;
+      const zRange = 4.0;
       const zInv = (BUCKETS - 1) / zRange;
 
       for (let i = 0; i < count; i++) {
@@ -693,7 +702,7 @@ function HeroSplat() {
       }
 
       if (!isDragging && performance.now() > resumeIdleAt) {
-        rotY += 0.0055;
+        rotY += 0.005;
       }
 
       gl.clear(gl.COLOR_BUFFER_BIT);
@@ -703,21 +712,21 @@ function HeroSplat() {
       gl.useProgram(program);
 
       const aspect = canvas.width / canvas.height;
-      mat4Perspective(proj, 42 * Math.PI / 180, aspect, 0.1, 10.0);
+      mat4Perspective(proj, 40 * Math.PI / 180, aspect, 0.1, 15.0);
 
       const eyeX = distance * Math.cos(rotX) * Math.sin(rotY);
       const eyeY = distance * Math.sin(rotX);
       const eyeZ = distance * Math.cos(rotX) * Math.cos(rotY);
       mat4LookAt(view, eyeX, eyeY, eyeZ, 0, 0, 0);
 
-      if ((sortFrame++ % 2) === 0) {
+      if (isDragging || (sortFrame++ % 2) === 0) {
         sortSplats(view);
       }
 
       mat4Multiply(mvp, proj, view);
 
       gl.uniformMatrix4fv(uMatrix, false, mvp);
-      gl.uniform1f(uPointScale, canvas.height * 1.35);
+      gl.uniform1f(uPointScale, canvas.height * 1.4);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
       gl.enableVertexAttribArray(aPosition);
@@ -742,7 +751,6 @@ function HeroSplat() {
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', stopDrag);
       canvas.removeEventListener('pointercancel', stopDrag);
-      canvas.removeEventListener('wheel', onWheel);
       gl.deleteBuffer(vbo);
       gl.deleteBuffer(ibo);
       gl.deleteProgram(program);
