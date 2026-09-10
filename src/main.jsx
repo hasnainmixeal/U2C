@@ -437,15 +437,326 @@ function Hero() {
 }
 
 function HeroSplat() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const gl = canvas.getContext('webgl2', { alpha: true, antialias: true }) ||
+               canvas.getContext('webgl', { alpha: true, antialias: true });
+    if (!gl) return;
+
+    gl.getExtension('OES_element_index_uint');
+
+    const vsSource = `
+      attribute vec3 a_position;
+      attribute vec4 a_color;
+      attribute float a_size;
+
+      uniform mat4 u_matrix;
+      uniform float u_pointScale;
+
+      varying vec4 v_color;
+
+      void main() {
+        vec4 pos = u_matrix * vec4(a_position, 1.0);
+        gl_Position = pos;
+        float psize = a_size * u_pointScale / max(0.1, pos.w);
+        gl_PointSize = clamp(psize, 2.0, 28.0);
+        v_color = vec4(a_color.rgb / 255.0, a_color.a / 255.0);
+      }
+    `;
+
+    const fsSource = `
+      precision mediump float;
+      varying vec4 v_color;
+
+      void main() {
+        vec2 coord = gl_PointCoord - vec2(0.5);
+        float distSq = dot(coord, coord);
+        if (distSq > 0.25) discard;
+        float alpha = exp(-distSq * 7.0) * v_color.a;
+        if (alpha < 0.015) discard;
+        gl_FragColor = vec4(v_color.rgb * alpha, alpha);
+      }
+    `;
+
+    const createShader = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    };
+
+    const vs = createShader(gl.VERTEX_SHADER, vsSource);
+    const fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    const aPosition = gl.getAttribLocation(program, 'a_position');
+    const aColor = gl.getAttribLocation(program, 'a_color');
+    const aSize = gl.getAttribLocation(program, 'a_size');
+    const uMatrix = gl.getUniformLocation(program, 'u_matrix');
+    const uPointScale = gl.getUniformLocation(program, 'u_pointScale');
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.disable(gl.DEPTH_TEST);
+    gl.clearColor(0, 0, 0, 0);
+
+    let count = 0;
+    let positions = null;
+    const vbo = gl.createBuffer();
+    const ibo = gl.createBuffer();
+    let indices = null;
+
+    let aborted = false;
+    fetch('./astronaut-splat.bin')
+      .then(r => r.arrayBuffer())
+      .then(buf => {
+        if (aborted) return;
+        count = buf.byteLength / 20;
+        positions = new Float32Array(buf);
+        indices = new Uint32Array(count);
+        for (let i = 0; i < count; i++) indices[i] = i;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW);
+      })
+      .catch(err => console.error('Failed to load splat data:', err));
+
+    let rotY = 0.25;
+    let rotX = 0.08;
+    let distance = 1.95;
+    let isDragging = false;
+    let lastX = 0, lastY = 0;
+    let resumeIdleAt = 0;
+
+    const onPointerDown = (e) => {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      canvas.setPointerCapture?.(e.pointerId);
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      rotY += dx * 0.007;
+      rotX = Math.max(-0.6, Math.min(0.7, rotX + dy * 0.007));
+      lastX = e.clientX;
+      lastY = e.clientY;
+    };
+
+    const stopDrag = () => {
+      if (isDragging) {
+        isDragging = false;
+        resumeIdleAt = performance.now() + 1500;
+      }
+    };
+
+    const onWheel = (e) => {
+      distance = Math.max(1.3, Math.min(3.2, distance + e.deltaY * 0.0015));
+      resumeIdleAt = performance.now() + 1500;
+    };
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', stopDrag);
+    canvas.addEventListener('pointercancel', stopDrag);
+    canvas.addEventListener('wheel', onWheel, { passive: true });
+
+    function mat4Perspective(out, fovy, aspect, near, far) {
+      const f = 1.0 / Math.tan(fovy / 2);
+      const nf = 1 / (near - far);
+      out.fill(0);
+      out[0] = f / aspect;
+      out[5] = f;
+      out[10] = (far + near) * nf;
+      out[11] = -1;
+      out[14] = 2 * far * near * nf;
+      return out;
+    }
+
+    function mat4Multiply(out, a, b) {
+      const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+      const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+      const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+      const a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+      let b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+      out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+      out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+      out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+      b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+      out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+      return out;
+    }
+
+    function mat4LookAt(out, eyex, eyey, eyez, centerx, centery, centerz) {
+      let z0 = eyex - centerx, z1 = eyey - centery, z2 = eyez - centerz;
+      let len = 1 / Math.hypot(z0, z1, z2);
+      z0 *= len; z1 *= len; z2 *= len;
+
+      let x0 = z2, x1 = 0, x2 = -z0;
+      len = 1 / Math.hypot(x0, x2);
+      x0 *= len; x2 *= len;
+
+      let y0 = z1 * x2, y1 = z2 * x0 - z0 * x2, y2 = -z1 * x0;
+
+      out[0] = x0; out[1] = y0; out[2] = z0; out[3] = 0;
+      out[4] = x1; out[5] = y1; out[6] = z1; out[7] = 0;
+      out[8] = x2; out[9] = y2; out[10] = z2; out[11] = 0;
+      out[12] = -(x0 * eyex + x2 * eyez);
+      out[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
+      out[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
+      out[15] = 1;
+      return out;
+    }
+
+    const proj = new Float32Array(16);
+    const view = new Float32Array(16);
+    const mvp = new Float32Array(16);
+
+    const BUCKETS = 512;
+    const bucketCounts = new Int32Array(BUCKETS);
+    const bucketStarts = new Int32Array(BUCKETS);
+    let sortFrame = 0;
+
+    function sortSplats(viewMatrix) {
+      const vzx = viewMatrix[2], vzy = viewMatrix[6], vzz = viewMatrix[10];
+      bucketCounts.fill(0);
+      const zMin = -3.0;
+      const zRange = 3.0;
+      const zInv = (BUCKETS - 1) / zRange;
+
+      for (let i = 0; i < count; i++) {
+        const pIdx = i * 5;
+        const cz = -(positions[pIdx] * vzx + positions[pIdx + 1] * vzy + positions[pIdx + 2] * vzz);
+        let b = Math.floor((cz - zMin) * zInv);
+        if (b < 0) b = 0; else if (b >= BUCKETS) b = BUCKETS - 1;
+        bucketCounts[b]++;
+      }
+
+      bucketStarts[BUCKETS - 1] = 0;
+      for (let b = BUCKETS - 2; b >= 0; b--) {
+        bucketStarts[b] = bucketStarts[b + 1] + bucketCounts[b + 1];
+      }
+
+      for (let i = 0; i < count; i++) {
+        const pIdx = i * 5;
+        const cz = -(positions[pIdx] * vzx + positions[pIdx + 1] * vzy + positions[pIdx + 2] * vzz);
+        let b = Math.floor((cz - zMin) * zInv);
+        if (b < 0) b = 0; else if (b >= BUCKETS) b = BUCKETS - 1;
+        indices[bucketStarts[b]++] = i;
+      }
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+      gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, indices);
+    }
+
+    let animationFrameId;
+    const render = () => {
+      animationFrameId = requestAnimationFrame(render);
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.round(canvas.clientWidth * dpr);
+      const h = Math.round(canvas.clientHeight * dpr);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+        gl.viewport(0, 0, w, h);
+      }
+
+      if (!isDragging && performance.now() > resumeIdleAt) {
+        rotY += 0.0055;
+      }
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      if (count === 0 || !positions) return;
+
+      gl.useProgram(program);
+
+      const aspect = canvas.width / canvas.height;
+      mat4Perspective(proj, 42 * Math.PI / 180, aspect, 0.1, 10.0);
+
+      const eyeX = distance * Math.cos(rotX) * Math.sin(rotY);
+      const eyeY = distance * Math.sin(rotX);
+      const eyeZ = distance * Math.cos(rotX) * Math.cos(rotY);
+      mat4LookAt(view, eyeX, eyeY, eyeZ, 0, 0, 0);
+
+      if ((sortFrame++ % 2) === 0) {
+        sortSplats(view);
+      }
+
+      mat4Multiply(mvp, proj, view);
+
+      gl.uniformMatrix4fv(uMatrix, false, mvp);
+      gl.uniform1f(uPointScale, canvas.height * 1.35);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.enableVertexAttribArray(aPosition);
+      gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 20, 0);
+
+      gl.enableVertexAttribArray(aColor);
+      gl.vertexAttribPointer(aColor, 4, gl.UNSIGNED_BYTE, false, 20, 12);
+
+      gl.enableVertexAttribArray(aSize);
+      gl.vertexAttribPointer(aSize, 1, gl.FLOAT, false, 20, 16);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+      gl.drawElements(gl.POINTS, count, gl.UNSIGNED_INT, 0);
+    };
+
+    render();
+
+    return () => {
+      aborted = true;
+      cancelAnimationFrame(animationFrameId);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', stopDrag);
+      canvas.removeEventListener('pointercancel', stopDrag);
+      canvas.removeEventListener('wheel', onWheel);
+      gl.deleteBuffer(vbo);
+      gl.deleteBuffer(ibo);
+      gl.deleteProgram(program);
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+    };
+  }, []);
+
   return (
-    <div className="hero-splat">
-      <iframe
-        title="Apollo Moon Lander Gaussian Splat"
-        src="./hero-viewer/index.html?noui&noanim"
-        allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope"
-        loading="eager"
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="hero-splat-canvas"
+      aria-label="Interactive Apollo Moon Lander astronaut Gaussian splat"
+    />
   );
 }
 

@@ -1,11 +1,16 @@
 import { copyFile, readdir, rm, mkdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
+import fs from 'node:fs';
 
 const rootDir = process.cwd();
 
-console.log('1. Generating hero viewer...');
-execSync('node scripts/generate-hero-viewer.mjs', { stdio: 'inherit' });
+console.log('1. Converting SOG to native splat binary buffer if needed...');
+if (!fs.existsSync(path.join(rootDir, 'astronaut-splat.bin')) || !fs.existsSync(path.join(rootDir, 'public/astronaut-splat.bin'))) {
+  execSync('node scripts/convert-sog-to-splat.mjs', { stdio: 'inherit' });
+} else {
+  console.log('astronaut-splat.bin already present.');
+}
 
 console.log('2. Preparing index.html from template...');
 await copyFile(path.join(rootDir, 'index.template.html'), path.join(rootDir, 'index.html'));
@@ -36,22 +41,28 @@ for (const file of newAssets) {
   await copyFile(path.join(distAssetsDir, file), path.join(assetsDir, file));
 }
 
-// Ensure hero-viewer exists at root for GitHub Pages serving from /
-const rootHeroViewerDir = path.join(rootDir, 'hero-viewer');
-await mkdir(rootHeroViewerDir, { recursive: true });
-await copyFile(path.join(rootDir, 'public/hero-viewer/index.html'), path.join(rootHeroViewerDir, 'index.html'));
-await copyFile(path.join(rootDir, 'public/hero-viewer/index.js'), path.join(rootHeroViewerDir, 'index.js'));
-
-// Ensure the SOG model files exist at root for GitHub Pages
-await copyFile(
-  path.join(rootDir, 'public/apollo-moon-lander-astronaut.sog'),
-  path.join(rootDir, 'apollo-moon-lander-astronaut.sog')
-);
-if (await readdir(path.join(rootDir, 'public')).then(f => f.includes('Apollo Moon Lander- Astronaut.sog'))) {
+// Ensure astronaut-splat.bin exists at root and in public
+if (fs.existsSync(path.join(rootDir, 'public/astronaut-splat.bin'))) {
   await copyFile(
-    path.join(rootDir, 'public/Apollo Moon Lander- Astronaut.sog'),
-    path.join(rootDir, 'Apollo Moon Lander- Astronaut.sog')
+    path.join(rootDir, 'public/astronaut-splat.bin'),
+    path.join(rootDir, 'astronaut-splat.bin')
   );
+}
+
+// Ensure SOG models exist at root for backwards compatibility
+if (fs.existsSync(path.join(rootDir, 'public/apollo-moon-lander-astronaut.sog'))) {
+  await copyFile(
+    path.join(rootDir, 'public/apollo-moon-lander-astronaut.sog'),
+    path.join(rootDir, 'apollo-moon-lander-astronaut.sog')
+  );
+}
+
+// Clean up legacy hero-viewer directories if present
+if (fs.existsSync(path.join(rootDir, 'hero-viewer'))) {
+  fs.rmSync(path.join(rootDir, 'hero-viewer'), { recursive: true, force: true });
+}
+if (fs.existsSync(path.join(rootDir, 'public/hero-viewer'))) {
+  fs.rmSync(path.join(rootDir, 'public/hero-viewer'), { recursive: true, force: true });
 }
 
 console.log('Build completed and deployed to root successfully!');
