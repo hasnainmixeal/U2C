@@ -405,7 +405,7 @@ function Nav() {
 function Hero() {
   return (
     <section id="overview" className="hero">
-      <PointCloud />
+      <HeroSplat />
       <div className="hero-copy">
         <p className="eyebrow">Unreal to Gaussian Splat 3.0</p>
         <h1>Turn Unreal Engine scenes into <em>Gaussian Splat</em> datasets.</h1>
@@ -433,6 +433,29 @@ function Hero() {
         <b>3DGS TRAINER</b>
       </div>
     </section>
+  );
+}
+
+function HeroSplat() {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className="hero-splat" aria-label="Interactive Apollo Moon Lander Gaussian splat">
+      {!loaded && (
+        <div className="hero-splat-loading" aria-live="polite">
+          <span />
+          Loading interactive splat
+        </div>
+      )}
+      <iframe
+        title="Apollo Moon Lander and astronaut — interactive Gaussian splat"
+        src="/hero-viewer/index.html?noui&noanim"
+        allow="fullscreen"
+        loading="eager"
+        onLoad={() => setLoaded(true)}
+      />
+      <div className="hero-splat-hint">Drag to rotate · Scroll to zoom</div>
+    </div>
   );
 }
 
