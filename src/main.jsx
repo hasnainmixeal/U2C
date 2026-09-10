@@ -449,8 +449,8 @@ function HeroSplat() {
       )}
       <iframe
         title="Apollo Moon Lander and astronaut — interactive Gaussian splat"
-        src="/hero-viewer/index.html?noui&noanim"
-        allow="fullscreen"
+        src="./hero-viewer/index.html?noui&noanim"
+        allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope"
         loading="eager"
         onLoad={() => setLoaded(true)}
       />

@@ -7,7 +7,7 @@
             name="viewport"
             content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
         />
-        <base href="/hero-viewer/">
+        
         <style>
             :root {
               --canvas-opacity: 1;
@@ -768,7 +768,7 @@
             viewer goes through that function rather than pattern-matching this document.
             Left as `null` for the standalone case.
         -->
-        <script type="application/json" id="sse-bootstrap">{"settings":{"version":2,"tonemapping":"linear","highPrecisionRendering":false,"background":{"color":[0.027,0.039,0.047]},"postEffectSettings":{"sharpness":{"enabled":false,"amount":0},"bloom":{"enabled":false,"intensity":0.1,"blurLevel":2},"grading":{"enabled":false,"brightness":1,"contrast":1,"saturation":1,"tint":[1,1,1]},"vignette":{"enabled":false,"intensity":0.5,"inner":0.3,"outer":0.75,"curvature":1},"fringing":{"enabled":false,"intensity":0.5}},"animTracks":[],"cameras":[{"initial":{"position":[2,2,-2],"target":[0,0,0],"fov":85}}],"annotations":[],"startMode":"default"},"contentUrl":"../apollo-moon-lander-astronaut.sog","contentFilename":"Apollo Moon Lander- Astronaut.sog"}</script>
+        <script type="application/json" id="sse-bootstrap">{"settings":{"version":2,"tonemapping":"linear","highPrecisionRendering":false,"background":{"color":[0.027,0.039,0.047]},"postEffectSettings":{"sharpness":{"enabled":false,"amount":0},"bloom":{"enabled":false,"intensity":0.1,"blurLevel":2},"grading":{"enabled":false,"brightness":1,"contrast":1,"saturation":1,"tint":[1,1,1]},"vignette":{"enabled":false,"intensity":0.5,"inner":0.3,"outer":0.75,"curvature":1},"fringing":{"enabled":false,"intensity":0.5}},"animTracks":[],"cameras":[{"initial":{"position":[0.75,-0.3,0.9],"target":[-1.216,-1.185,-1.055],"fov":50}}],"annotations":[],"startMode":"default"},"contentUrl":"../apollo-moon-lander-astronaut.sog","contentFilename":"Apollo Moon Lander- Astronaut.sog"}</script>
 
         <script type="module">
             const createImage = (url) => {
@@ -831,35 +831,7 @@
                 settings: bootstrap.settings ?? fetch(settingsUrl).then((response) => response.json())
             };
         </script>
-        
-<script>
-(() => {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  let previous = performance.now();
-  let dragging = false;
-  let resumeAt = previous + 1200;
-
-  addEventListener('pointerdown', () => { dragging = true; }, { capture: true });
-  addEventListener('pointerup', () => { dragging = false; resumeAt = performance.now() + 2800; }, { capture: true });
-  addEventListener('pointercancel', () => { dragging = false; resumeAt = performance.now() + 2800; }, { capture: true });
-  addEventListener('wheel', () => { resumeAt = performance.now() + 2800; }, { capture: true, passive: true });
-
-  const rotate = (now) => {
-    const delta = Math.min(now - previous, 50);
-    previous = now;
-    if (!dragging && now > resumeAt && typeof getCameraState === 'function' && typeof setCameraState === 'function') {
-      const camera = getCameraState();
-      if (camera?.mode === 'orbit' && Array.isArray(camera.angles)) {
-        camera.angles[1] += delta * 0.002;
-        setCameraState(camera);
-      }
-    }
-    requestAnimationFrame(rotate);
-  };
-  requestAnimationFrame(rotate);
-})();
-</script>
-<style>body { background-color: rgb(7, 10, 12); }</style>
+        <style>body { background-color: rgb(7, 10, 12); }</style>
     </head>
     <body>
         <canvas id="application-canvas"></canvas>
@@ -1475,6 +1447,44 @@
                 const canvas = document.getElementById('application-canvas');
                 const settingsJson = await settings;
                 const viewer = await main(canvas, settingsJson, config);
+                window.viewer = viewer;
+
+                // Ensure orbit mode is active for interactive 360 rotation in place
+                viewer.global.events.on('cameraMode:changed', (mode) => {
+                    if (mode === 'anim') {
+                        viewer.global.state.cameraMode = 'orbit';
+                    }
+                });
+                viewer.global.state.cameraMode = 'orbit';
+
+                const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (!prefersReduced) {
+                    let isInteracting = false;
+                    let resumeAt = performance.now() + 1000;
+
+                    const onStart = () => { isInteracting = true; };
+                    const onEnd = () => { isInteracting = false; resumeAt = performance.now() + 2000; };
+
+                    window.addEventListener('pointerdown', onStart, { capture: true });
+                    window.addEventListener('pointerup', onEnd, { capture: true });
+                    window.addEventListener('pointercancel', onEnd, { capture: true });
+                    window.addEventListener('wheel', () => { resumeAt = performance.now() + 2000; }, { capture: true, passive: true });
+                    window.addEventListener('touchstart', onStart, { capture: true, passive: true });
+                    window.addEventListener('touchend', onEnd, { capture: true, passive: true });
+
+                    viewer.global.app.on('update', (dt) => {
+                        const now = performance.now();
+                        const src = viewer.inputController?._keyboardMouse?._source;
+                        if (!isInteracting && now > resumeAt && src && viewer.cameraManager) {
+                            if (viewer.global.state.cameraMode === 'orbit') {
+                                // Gentle, cinematic idle rotation in place (~15 deg/sec)
+                                const step = -10 * Math.min(dt, 0.1);
+                                src.deltas.mouse.append([step, 0]);
+                                viewer.global.app.renderNextFrame = true;
+                            }
+                        }
+                    });
+                }
             });
         </script>
     </body>
