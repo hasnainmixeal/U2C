@@ -458,6 +458,7 @@ function HeroSplat() {
     app.start();
     app.setCanvasFillMode(pc.FILLMODE_NONE);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
+    app.scene.toneMapping = pc.TONEMAP_NONE;
 
     // Completely disable mouse wheel zoom as requested
     const onWheel = (e) => {
@@ -466,15 +467,16 @@ function HeroSplat() {
     };
     canvas.addEventListener('wheel', onWheel, { passive: false });
 
-    // Exact Apollo Moon Lander astronaut center in world coordinates
-    const target = new pc.Vec3(1.03358, 1.12, -1.1402);
-    const distance = 2.75;
+    // Exact Apollo Moon Lander astronaut center in world coordinates (lowered to 1.05 to vertically center full body)
+    const target = new pc.Vec3(1.03358, 1.05, -1.1402);
+    // Distance 3.35 comfortably fits head, antenna, hands, and boots without clipping
+    const distance = 3.35;
     let yaw = 35; // Front 3/4 angle showcasing gold visor reflections
     let pitch = 6; // Slight top-front angle
 
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
-      clearColor: new pc.Color(0.02745, 0.0392, 0.04706, 0),
+      clearColor: new pc.Color(0, 0, 0, 0),
       fov: 46,
       nearClip: 0.01,
       farClip: 100
