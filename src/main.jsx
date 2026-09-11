@@ -467,10 +467,10 @@ function HeroSplat() {
     };
     canvas.addEventListener('wheel', onWheel, { passive: false });
 
-    // Exact Apollo Moon Lander astronaut center in world coordinates (lowered to 1.05 to vertically center full body)
-    const target = new pc.Vec3(1.03358, 1.05, -1.1402);
-    // Distance 3.35 comfortably fits head, antenna, hands, and boots without clipping
-    const distance = 3.35;
+    // Exact Apollo Moon Lander astronaut center in world coordinates
+    const target = new pc.Vec3(1.03358, 1.11, -1.1402);
+    // Distance 2.70 scales the astronaut uniformly so its height spans from header to bottom pipeline bar matching user rectangle
+    const distance = 2.70;
     let yaw = 35; // Front 3/4 angle showcasing gold visor reflections
     let pitch = 6; // Slight top-front angle
 
